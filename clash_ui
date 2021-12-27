@@ -148,9 +148,9 @@ startsecs=10                                                ;启动后确认无�
 autorestart=true                                            ;程序退出后自动重启,可选值：[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启
 startretries=3                                              ;启动失败自动重试次数，默认是3
 redirect_stderr=true 																				;把stderr重定向到stdout，默认false
-stdout_logfile_maxbytes=20MB  															;stdout 日志文件大小，默认50MB
-stdout_logfile_backups = 5   													   		;stdout 日志文件备份数，默认是10
-stdout_logfile=/tmp/clash.log						      	            ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
+stdout_logfile_maxbytes=20MB  				    ;stdout 日志文件大小，默认50MB
+stdout_logfile_backups = 5   				    ;stdout 日志文件备份数，默认是10
+stdout_logfile=/tmp/clash.log				    ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
 EOF
 }
 
@@ -164,9 +164,9 @@ startsecs=10                                                ;启动后确认无�
 autorestart=true                                            ;程序退出后自动重启,可选值：[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启
 startretries=3                                              ;启动失败自动重试次数，默认是3
 redirect_stderr=true 																				;把stderr重定向到stdout，默认false
-stdout_logfile_maxbytes=20MB  															;stdout 日志文件大小，默认50MB
-stdout_logfile_backups = 5   													   		;stdout 日志文件备份数，默认是10
-#stdout_logfile=/tmp/mosdns.log								              ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
+stdout_logfile_maxbytes=20MB  				    ;stdout 日志文件大小，默认50MB
+stdout_logfile_backups = 5   				    ;stdout 日志文件备份数，默认是10
+#stdout_logfile=/tmp/mosdns.log				    ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
 EOF
 }
 
