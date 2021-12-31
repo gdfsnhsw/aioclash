@@ -933,10 +933,10 @@ getcpucore2(){
 }
 
 getcpucore3(){
-	cputype2=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
-  [ -n "$(echo $cputype3 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore2="armv7"
-	[ -n "$(echo $cputype3 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore2="aarch64"
-	[ -n "$(echo $cputype3 | grep -E "linux.*86_64.*")" ] && cpucore2="linux64"
+	cputype3=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
+  [ -n "$(echo $cputype3 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore3="armv7"
+	[ -n "$(echo $cputype3 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore3="aarch64"
+	[ -n "$(echo $cputype3 | grep -E "linux.*86_64.*")" ] && cpucore3="linux64"
 }
 
 
@@ -1313,7 +1313,7 @@ update_shell() {
         echo -e "${red}AIOClash下载失败!${end}"
         exit 1
         fi
-        echo -e "`date +%F\ %T` Clash_UI v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
+        echo -e "`date +%F\ %T` AIOClash v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
         rm -rf /usr/bin/aioclash   
         mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
         chmod +x /usr/bin/aioclash >> /dev/null 2>&1
@@ -1771,6 +1771,7 @@ show_menu() {
     getipv4
     getcpucore
     getcpucore2
+    getcpucore3
     show_status
     echo -e "———————————————————————————"
     update_shell
