@@ -921,22 +921,22 @@ EOF
 getcpucore(){
   cputype=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
   [ -n "$(echo $cputype | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore="armv7"
-	[ -n "$(echo $cputype | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore="armv8"
-	[ -n "$(echo $cputype | grep -E "linux.*86_64.*")" ] && cpucore="amd64"
+  [ -n "$(echo $cputype | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore="armv8"
+  [ -n "$(echo $cputype | grep -E "linux.*86_64.*")" ] && cpucore="amd64"
 }
 
 getcpucore2(){
-	cputype2=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
+  cputype2=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
   [ -n "$(echo $cputype2 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore2="armv7"
-	[ -n "$(echo $cputype2 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore2="arm64"
-	[ -n "$(echo $cputype2 | grep -E "linux.*86_64.*")" ] && cpucore2="amd64"
+  [ -n "$(echo $cputype2 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore2="arm64"
+  [ -n "$(echo $cputype2 | grep -E "linux.*86_64.*")" ] && cpucore2="amd64"
 }
 
 getcpucore3(){
-	cputype3=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
+  cputype3=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
   [ -n "$(echo $cputype3 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore3="armv7"
-	[ -n "$(echo $cputype3 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore3="aarch64"
-	[ -n "$(echo $cputype3 | grep -E "linux.*86_64.*")" ] && cpucore3="linux64"
+  [ -n "$(echo $cputype3 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore3="aarch64"
+  [ -n "$(echo $cputype3 | grep -E "linux.*86_64.*")" ] && cpucore3="linux64"
 }
 
 
