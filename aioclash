@@ -5,7 +5,6 @@
 #   Author: 2020.01.01
 #======================================================
 
-
 end="\033[0m"
 black="\033[0;30m"
 blackb="\033[1;30m"
@@ -24,45 +23,36 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-
 sh_ver="4.0.0"
-
 
 url_cdn="https://git.o8.cx/"
 
 cpu=$(hostnamectl | grep Architecture: | awk '{print $2}')
-
 system=$(cat /etc/issue | awk '{print $1}')
 gateway=$(cat /etc/network/interfaces |grep gateway | awk '{print $2}' | head -n 1)
-
 local_ip=$(ip a 2>&1 | grep -w 'inet' | grep 'global' | grep -E '\ 1(92|0|72|00|1)\.' | sed 's/.*inet.//g' | sed 's/\/[0-9][0-9].*$//g' | head -n 1);
-
-
 eth_n=$(ip --oneline link show up | grep -v "lo" | awk '{print$2;exit}' | cut -d':' -f1 | cut -d'@' -f1)
-
-
 
 webget2(){
   #参数【$1】代表下载目录，【$2】代表在线地址
-	#参数【$3】代表输出显示，【$4】不启用重定向
-	if curl --version > /dev/null 2>&1;then
-		[ "$3" = "echooff" ] && progress='-s' || progress='-#'
-		[ -z "$4" ] && redirect='-L' || redirect=''
-		result=$(curl -w %{http_code} --connect-timeout 5 $progress $redirect -ko $1 $2)
-	else
-		if wget --version > /dev/null 2>&1;then
-			[ "$3" = "echooff" ] && progress='-q' || progress='-q --show-progress'
-			[ "$4" = "rediroff" ] && redirect='--max-redirect=0' || redirect=''
-			certificate='--no-check-certificate'
-			timeout='--timeout=3'
-		fi
-		[ "$3" = "echoon" ] && progress=''
-		[ "$3" = "echooff" ] && progress='-q'
-		wget $progress $redirect $certificate $timeout -O $1 $2 
-		[ $? -eq 0 ] && result="200"
-	fi
+  #参数【$3】代表输出显示，【$4】不启用重定向
+  if curl --version > /dev/null 2>&1;then
+    [ "$3" = "echooff" ] && progress='-s' || progress='-#'
+    [ -z "$4" ] && redirect='-L' || redirect=''
+    result=$(curl -w %{http_code} --connect-timeout 5 $progress $redirect -ko $1 $2)
+  else
+    if wget --version > /dev/null 2>&1;then
+      [ "$3" = "echooff" ] && progress='-q' || progress='-q --show-progress'
+      [ "$4" = "rediroff" ] && redirect='--max-redirect=0' || redirect=''
+      certificate='--no-check-certificate'
+      timeout='--timeout=3'
+    fi
+  [ "$3" = "echoon" ] && progress=''
+  [ "$3" = "echooff" ] && progress='-q'
+  wget $progress $redirect $certificate $timeout -O $1 $2 
+  [ $? -eq 0 ] && result="200"
+  fi
 }
-
 
 # check root
 [[ $EUID -ne 0 ]] && echo -e "${red}错误:  必须使用root用户运行此脚本!\n${end}" && exit 1
@@ -75,7 +65,6 @@ elif cat /etc/issue | grep -Eqi "Armbian"; then
 else
     echo -e "${red}请使用 Debian或Armbian 系统!\n${end}" && exit 1
 fi
-
 
 os_version=""
 
