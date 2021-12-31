@@ -3,7 +3,7 @@
 #======================================================
 #   System Required:  Debian 10+ 
 #   Description: Manage clash
-#   Author: J. 2021.12.20
+#   Author: 2022.01.01
 #======================================================
 
 red='\033[0;31m'
@@ -34,13 +34,13 @@ webget(){
 	fi
 }
 
-webget /srv/version $url_cdn/https://raw.githubusercontent.com/fjjonline/c-m/main/version >> /dev/null 2>&1
-webget /usr/bin/clash_ui $url_cdn/https://raw.githubusercontent.com/fjjonline/c-m/main/clash_ui
-#wget -O /usr/bin/clash_ui https://raw.githubusercontent.com/fjjonline/c-m/main/clash_ui >> /dev/null 2>&1
-chmod +x /usr/bin/clash_ui >> /dev/null 2>&1
+webget /srv/version $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version >> /dev/null 2>&1
+webget /usr/bin/aioclash $url_cdn/https://raw.githubusercontent.com/fgdfsnhsw/aioclash/main/aioclash
+#wget -O /usr/bin/aioclash https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash >> /dev/null 2>&1
+chmod +x /usr/bin/aioclash >> /dev/null 2>&1
 echo "---------------------------------------"
-echo -e "${green}Clash_ui 安装成功${plain}"
-echo -e "${green}Clash_UI使用方法 clash_ui${plain}"
-echo -e "${green}第一次请用命令安装 clash_ui install${plain}"
+echo -e "${green}AIOClash 安装成功${plain}"
+echo -e "${green}AIOClash使用方法 aioclash${plain}"
+echo -e "${green}第一次请用命令安装 aioclash install${plain}"
 echo "---------------------------------------"
-clash_ui install
+aioclash install
