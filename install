@@ -35,7 +35,7 @@ webget(){
 }
 
 webget /srv/version $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version >> /dev/null 2>&1
-webget /usr/bin/aioclash $url_cdn/https://raw.githubusercontent.com/fgdfsnhsw/aioclash/main/aioclash
+webget /usr/bin/aioclash $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
 #wget -O /usr/bin/aioclash https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash >> /dev/null 2>&1
 chmod +x /usr/bin/aioclash >> /dev/null 2>&1
 echo "---------------------------------------"
