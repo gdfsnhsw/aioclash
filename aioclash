@@ -43,7 +43,7 @@ eth_n=$(ip --oneline link show up | grep -v "lo" | awk '{print$2;exit}' | cut -d
 
 
 webget2(){
-	#参数【$1】代表下载目录，【$2】代表在线地址
+  #参数【$1】代表下载目录，【$2】代表在线地址
 	#参数【$3】代表输出显示，【$4】不启用重定向
 	if curl --version > /dev/null 2>&1;then
 		[ "$3" = "echooff" ] && progress='-s' || progress='-#'
@@ -187,9 +187,9 @@ EOF
 }
 
 dler_clash_config() {
-     if [ ! -d "/srv/clash" ]; then
-     mkdir /srv/clash
-     fi  
+  if [ ! -d "/srv/clash" ]; then
+    mkdir /srv/clash
+  fi  
 cat << EOF > /srv/clash/config.yaml
 # 系统参数
 port: 7890                        # HTTP代理端口
@@ -919,7 +919,7 @@ EOF
 }
 
 getcpucore(){
-	cputype=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
+  cputype=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
   [ -n "$(echo $cputype | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore="armv7"
 	[ -n "$(echo $cputype | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore="armv8"
 	[ -n "$(echo $cputype | grep -E "linux.*86_64.*")" ] && cpucore="amd64"
@@ -941,586 +941,557 @@ getcpucore3(){
 
 
 install_debian() {
+  rm -rf /etc/apt/sources.list.d/*
 
-
-rm -rf /etc/apt/sources.list.d/*
-
-cat << EOF > /etc/apt/sources.list
+  cat << EOF > /etc/apt/sources.list
 deb http://mirrors.aliyun.com/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1) main
 deb http://mirrors.aliyun.com/debian-security $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)/updates main
 deb http://mirrors.aliyun.com/debian $(cat /etc/os-release | grep VERSION= | cut -d '(' -f2 | cut -d ')' -f1)-updates main
 EOF
-echo -e "${green}升级系统,请稍候! 大概5-10分钟!${end}" 
-apt update >> /dev/null 2>&1
-apt -y full-upgrade >> /dev/null 2>&1
-apt -y autoclean >> /dev/null 2>&1 
-echo -e "${green}系统升级完成!${end}"
+  echo -e "${green}升级系统,请稍候! 大概5-10分钟!${end}" 
+  apt update >> /dev/null 2>&1
+  apt -y full-upgrade >> /dev/null 2>&1
+  apt -y autoclean >> /dev/null 2>&1 
+  echo -e "${green}系统升级完成!${end}"
 
-
-echo -e "${green}安装软件,请稍候! 大概5-10分钟!${end}"     
-apt -y install htop sudo strace supervisor curl wget unzip nftables ntpdate net-tools gawk >> /dev/null 2>&1
-rm /etc/localtime
-ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-ntpdate cn.pool.ntp.org >> /dev/null 2>&1
-chown -R root /srv/ >> /dev/null 2>&1
-echo -e "${green}软件安装完成!${end}"
-
+  echo -e "${green}安装软件,请稍候! 大概5-10分钟!${end}"     
+  apt -y install htop sudo strace supervisor curl wget unzip nftables ntpdate net-tools gawk >> /dev/null 2>&1
+  rm /etc/localtime
+  ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+  ntpdate cn.pool.ntp.org >> /dev/null 2>&1
+  chown -R root /srv/ >> /dev/null 2>&1
+  echo -e "${green}软件安装完成!${end}"
 }
 
 install_clash() {
-     #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
-     new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
-     if [[ ! -n "$new_clash_ver" ]]; then
-     echo -e "${red}Clash检测版本失败!${end}"
-     exit 1
-     fi      
-     if [ ! -d "/tmp/clash" ]; then
-     mkdir /tmp/clash
-     fi 
-     webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
-     if [[ $? -ne 0 ]]; then
-     echo -e "${red}Clash下载失败!${end}"
-     exit 1
-     fi
-     echo -e "${green}Clash下载成功!${end}" 
-     rm -rf /usr/bin/clash
-     gunzip /tmp/clash/clash.gz
-     mv /tmp/clash/clash /usr/bin/clash
-     chmod +x /usr/bin/clash
-     setcap cap_net_bind_service=+ep /usr/bin/clash
-     webget2  /tmp/dashboard.tar.gz  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/clash/dashboard.tar.gz
-     if [[ $? -ne 0 ]]; then
-     echo -e "${red}UI下载失败!${end}"
-     exit 1
-     fi
-     echo -e "${green}UI下载成功!${end}" 
-     if [ ! -d "/srv/clash" ]; then
-     mkdir /srv/clash
-     fi 
-     webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-     tar zxvf /tmp/dashboard.tar.gz  -C /srv/clash/ >> /dev/null 2>&1
-     rm -rf /tmp/dashboard.tar.gz
-     supervisor_clash_config
-     supervisorctl update >> /dev/null 2>&1
-     supervisorctl restart clash >> /dev/null 2>&1
-     echo -e "${green}Clash安装成功!${end}"
-     echo -e "${green}Clash初始化!${end}" &&sleep 30
+  #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
+  new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
+  if [[ ! -n "$new_clash_ver" ]]; then
+    echo -e "${red}Clash检测版本失败!${end}"
+    exit 1
+  fi      
+  if [ ! -d "/tmp/clash" ]; then
+    mkdir /tmp/clash
+  fi 
+  webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Clash下载失败!${end}"
+    exit 1
+  fi
+    echo -e "${green}Clash下载成功!${end}" 
+  rm -rf /usr/bin/clash
+  gunzip /tmp/clash/clash.gz
+  mv /tmp/clash/clash /usr/bin/clash
+  chmod +x /usr/bin/clash
+  setcap cap_net_bind_service=+ep /usr/bin/clash
+  webget2  /tmp/dashboard.tar.gz  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/clash/dashboard.tar.gz
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}UI下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}UI下载成功!${end}" 
+  if [ ! -d "/srv/clash" ]; then
+    mkdir /srv/clash
+  fi 
+  webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+  tar zxvf /tmp/dashboard.tar.gz  -C /srv/clash/ >> /dev/null 2>&1
+  rm -rf /tmp/dashboard.tar.gz
+  supervisor_clash_config
+  supervisorctl update >> /dev/null 2>&1
+  supervisorctl restart clash >> /dev/null 2>&1
+  echo -e "${green}Clash安装成功!${end}"
+  echo -e "${green}Clash初始化!${end}" &&sleep 30
 }
 
 update_clash_y() {
-       	#new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
-        new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
-        if [[ ! -n "$new_clash_ver" ]]; then
-        echo -e "${red}Clash检测版本失败!${end}"
-        exit 1
-        fi  
-	      if [ ! -d "/tmp/clash" ]; then
-        mkdir /tmp/clash
-        fi            
-        webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Clash下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Clash下载成功!${end}" 
-        rm -rf /usr/bin/clash
-        gunzip /tmp/clash/clash.gz
-        mv /tmp/clash/clash /usr/bin/clash
-        chmod +x /usr/bin/clash
-        rm -rf /tmp/clash
-        supervisorctl restart clash >> /dev/null 2>&1
-        echo -e "${green}升级Clash成功，请重新运行脚本!${end}" && exit 0
-
+  #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
+  new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
+  if [[ ! -n "$new_clash_ver" ]]; then
+    echo -e "${red}Clash检测版本失败!${end}"
+    exit 1
+  fi  
+  if [ ! -d "/tmp/clash" ]; then
+    mkdir /tmp/clash
+  fi            
+  webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Clash下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Clash下载成功!${end}" 
+  rm -rf /usr/bin/clash
+  gunzip /tmp/clash/clash.gz
+  mv /tmp/clash/clash /usr/bin/clash
+  chmod +x /usr/bin/clash
+  rm -rf /tmp/clash
+  supervisorctl restart clash >> /dev/null 2>&1
+  echo -e "${green}升级Clash成功，请重新运行脚本!${end}" && exit 0
 }
 
 update_clash() {
-       	#new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
-        new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
-        now_clash_ver=$(clash -v | awk '{print $2}')
-      	if [[ "${now_clash_ver}" != "${new_clash_ver}" ]]  ;then
-	      echo -e "Clash已有新版本: ${new_clash_ver}，当前版本:${now_clash_ver}，开始安装"
-        if [[ ! -n "$new_clash_ver" ]]; then
-        echo -e "${red}Clash检测版本失败!${end}"
-        exit 1
-        fi
-        if [ ! -d "/tmp/clash" ]; then
-        mkdir /tmp/clash
-        fi 
-        webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Clash下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Clash下载成功!${end}" 
-        rm -rf /usr/bin/clash
-        gunzip /tmp/clash/clash.gz
-        mv /tmp/clash/clash /usr/bin/clash
-        chmod +x /usr/bin/clash
-        supervisorctl restart clash >> /dev/null 2>&1
-        echo -e "${green}Clash升级成功，请重新运行脚本!${end}" && exit 0
-        fi
+  #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
+  new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
+  now_clash_ver=$(clash -v | awk '{print $2}')
+  if [[ "${now_clash_ver}" != "${new_clash_ver}" ]]  ;then
+    echo -e "Clash已有新版本: ${new_clash_ver}，当前版本:${now_clash_ver}，开始安装"
+    if [[ ! -n "$new_clash_ver" ]]; then
+      echo -e "${red}Clash检测版本失败!${end}"
+      exit 1
+    fi
+    if [ ! -d "/tmp/clash" ]; then
+      mkdir /tmp/clash
+    fi 
+    webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
+    if [[ $? -ne 0 ]]; then
+      echo -e "${red}Clash下载失败!${end}"
+      exit 1
+    fi
+    echo -e "${green}Clash下载成功!${end}" 
+    rm -rf /usr/bin/clash
+    gunzip /tmp/clash/clash.gz
+    mv /tmp/clash/clash /usr/bin/clash
+    chmod +x /usr/bin/clash
+    supervisorctl restart clash >> /dev/null 2>&1
+    echo -e "${green}Clash升级成功，请重新运行脚本!${end}" && exit 0
+  fi
 }
 
 install_mosdns() {
-     #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-     new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
-     if [[ ! -n "$new_mosdns_ver" ]]; then
-     echo -e "${red}Mosdns检测版本失败!${end}"
-     exit 1
-     fi
-     if [ ! -d "/tmp/mosdns" ]; then
-     mkdir /tmp/mosdns
-     fi 
-     cd /tmp/mosdns
-     if [ ! -d "/srv/mosdns" ]; then
-     mkdir /srv/mosdns
-     fi 
-     webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
-     if [[ $? -ne 0 ]]; then
-     echo -e "${red}Mosdns下载失败!${end}"
-     exit 1
-     fi
-     echo -e "${green}Mosdns下载成功!${end}" 
-     cd /tmp/mosdns
-     rm -rf /usr/bin/mosdns
-     unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-     mv mosdns /usr/bin/mosdns
-     chmod 777 /usr/bin/mosdns
-     webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-     echo -e "${green}config.yaml下载成功${end}"	     
-     webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
-     echo -e "${green}geoip.dat下载成功${end}"	
-     webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-     echo -e "${green}geosite.dat下载成功${end}"	     
-     rm -rf /tmp/mosdns
-     supervisor_mosdns_config
-     supervisorctl update >> /dev/null 2>&1
-     supervisorctl restart mosdns >> /dev/null 2>&1
-     echo -e "${green}Mosdns安装成功!${end}"
+  #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
+  new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
+  if [[ ! -n "$new_mosdns_ver" ]]; then
+    echo -e "${red}Mosdns检测版本失败!${end}"
+    exit 1
+  fi
+  if [ ! -d "/tmp/mosdns" ]; then
+    mkdir /tmp/mosdns
+  fi 
+  cd /tmp/mosdns
+  if [ ! -d "/srv/mosdns" ]; then
+    mkdir /srv/mosdns
+  fi 
+  webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Mosdns下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Mosdns下载成功!${end}" 
+  cd /tmp/mosdns
+  rm -rf /usr/bin/mosdns
+  unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
+  mv mosdns /usr/bin/mosdns
+  chmod 777 /usr/bin/mosdns
+  webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
+  echo -e "${green}config.yaml下载成功${end}"	     
+  webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
+  echo -e "${green}geoip.dat下载成功${end}"	
+  webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  echo -e "${green}geosite.dat下载成功${end}"	     
+  rm -rf /tmp/mosdns
+  supervisor_mosdns_config
+  supervisorctl update >> /dev/null 2>&1
+  supervisorctl restart mosdns >> /dev/null 2>&1
+  echo -e "${green}Mosdns安装成功!${end}"
 }
 
-
-
-
 update_mosdns_y() {
-        #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-        new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
-        if [[ ! -n "$new_mosdns_ver" ]]; then
-        echo -e "${red}Mosdns检测版本失败!${end}"
-        exit 1
-        fi
-        if [ ! -d "/tmp/mosdns" ]; then
-        mkdir /tmp/mosdns
-        fi         
-        webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Mosdns下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Mosdns下载成功!${end}" 
-        cd /tmp/mosdns
-        rm -rf /usr/bin/mosdns
-        rm -rf /srv/mosdns/config.yaml
-        webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-        echo -e "${green}config.yaml下载成功${end}"	
-        unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-        mv mosdns /usr/bin/mosdns
-        chmod 777 /usr/bin/mosdns
-        rm -rf /tmp/mosdns
-        supervisorctl restart mosdns >> /dev/null 2>&1
-        echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
-
+  #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
+  new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
+  if [[ ! -n "$new_mosdns_ver" ]]; then
+    echo -e "${red}Mosdns检测版本失败!${end}"
+    exit 1
+  fi
+  if [ ! -d "/tmp/mosdns" ]; then
+     mkdir /tmp/mosdns
+  fi         
+  webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Mosdns下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Mosdns下载成功!${end}" 
+  cd /tmp/mosdns
+  rm -rf /usr/bin/mosdns
+  rm -rf /srv/mosdns/config.yaml
+  webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
+  echo -e "${green}config.yaml下载成功${end}"	
+  unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
+  mv mosdns /usr/bin/mosdns
+  chmod 777 /usr/bin/mosdns
+  rm -rf /tmp/mosdns
+  supervisorctl restart mosdns >> /dev/null 2>&1
+  echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
 }
 
 
 update_mosdns() {
-        #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-        new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
-        now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
-	      if [[ "${now_mosdns_ver}" != "${new_mosdns_ver}" ]]  ;then
-	      echo -e "Mosdns已有新版本: ${new_mosdns_ver}，当前版本:${now_mosdns_ver}，开始安装"
-        if [[ ! -n "$new_mosdns_ver" ]]; then
-        echo -e "${red}Mosdns检测版本失败!${end}"
-        exit 1
-        fi
-        if [ ! -d "/tmp/mosdns" ]; then
-        mkdir /tmp/mosdns
-        fi         
-        webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
-	      #[ "$result" != "200" ] && echo "文件下载失败！" && exit 1
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Mosdns下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Mosdns下载成功!${end}" 
-        cd /tmp/mosdns
-        rm -rf /usr/bin/mosdns
-        rm -rf /srv/mosdns/config.yaml
-        webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-        echo -e "${green}config.yaml下载成功${end}"	
-        unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-        mv /tmp/mosdns/mosdns /usr/bin/mosdns
-        chmod 777 /usr/bin/mosdns
-        rm -rf /tmp/mosdns
-        supervisorctl restart mosdns >> /dev/null 2>&1
-        echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
-        fi
-
+  #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
+  new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
+  now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
+  if [[ "${now_mosdns_ver}" != "${new_mosdns_ver}" ]]  ;then
+    echo -e "Mosdns已有新版本: ${new_mosdns_ver}，当前版本:${now_mosdns_ver}，开始安装"
+    if [[ ! -n "$new_mosdns_ver" ]]; then
+      echo -e "${red}Mosdns检测版本失败!${end}"
+      exit 1
+    fi
+    if [ ! -d "/tmp/mosdns" ]; then
+      mkdir /tmp/mosdns
+    fi         
+    webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
+    #[ "$result" != "200" ] && echo "文件下载失败！" && exit 1
+    if [[ $? -ne 0 ]]; then
+      echo -e "${red}Mosdns下载失败!${end}"
+      exit 1
+    fi
+    echo -e "${green}Mosdns下载成功!${end}" 
+    cd /tmp/mosdns
+    rm -rf /usr/bin/mosdns
+    rm -rf /srv/mosdns/config.yaml
+    webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
+    echo -e "${green}config.yaml下载成功${end}"	
+    unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
+    mv /tmp/mosdns/mosdns /usr/bin/mosdns
+    chmod 777 /usr/bin/mosdns
+    rm -rf /tmp/mosdns
+    supervisorctl restart mosdns >> /dev/null 2>&1
+    echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
+  fi
 }
 
 
 
 install_subconverter() {
-     #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
-     new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
-     if [[ ! -n "$new_subconverter_ver" ]]; then
-     echo -e "${red}subconverter检测版本失败!${end}"
-     exit 1
-     fi
-     if [ ! -d "/tmp/subconverter" ]; then
-     mkdir /tmp/subconverter
-     fi 
-     cd /tmp/subconverter
-     if [ ! -d "/srv/subconverter" ]; then
-     mkdir /srv/subconverter
-     fi 
-     webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
-     if [[ $? -ne 0 ]]; then
-     echo -e "${red}Subconverter下载失败!${end}"
-     exit 1
-     fi
-     echo -e "${green}Subconverter下载成功!${end}" 
-     cd /tmp/subconverter
-     rm -rf /usr/bin/subconverter
-     tar zxvf subconverter.tar.gz  -C /srv/ >> /dev/null 2>&1
-     webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
-     echo -e "${green}all_base.tpl下载成功${end}"
-     webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
-     echo -e "${green}Loyalsoldier.ini下载成功${end}"	
-     webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
-     echo -e "${green}yuanlam.ini下载成功${end}"
-     webget2 /srv/subconverter/profiles/formyairport.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"  
-     echo -e "${green}formyairport.ini下载成功${end}"		    
-     rm -rf /tmp/subconverter
-     supervisor_subconverter_config
-     supervisorctl update >> /dev/null 2>&1
-     supervisorctl restart subconverter >> /dev/null 2>&1
-     echo -e "${green}Subconverter安装成功!${end}"
+  #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
+  new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
+  if [[ ! -n "$new_subconverter_ver" ]]; then
+    echo -e "${red}subconverter检测版本失败!${end}"
+    exit 1
+  fi
+  if [ ! -d "/tmp/subconverter" ]; then
+    mkdir /tmp/subconverter
+  fi 
+    cd /tmp/subconverter
+  if [ ! -d "/srv/subconverter" ]; then
+    mkdir /srv/subconverter
+  fi 
+  webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Subconverter下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Subconverter下载成功!${end}" 
+  cd /tmp/subconverter
+  rm -rf /usr/bin/subconverter
+  tar zxvf subconverter.tar.gz  -C /srv/ >> /dev/null 2>&1
+  webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
+  echo -e "${green}all_base.tpl下载成功${end}"
+  webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
+  echo -e "${green}Loyalsoldier.ini下载成功${end}"	
+  webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
+  echo -e "${green}yuanlam.ini下载成功${end}"
+  webget2 /srv/subconverter/profiles/formyairport.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"  
+  echo -e "${green}formyairport.ini下载成功${end}"		    
+  rm -rf /tmp/subconverter
+  supervisor_subconverter_config
+  supervisorctl update >> /dev/null 2>&1
+  supervisorctl restart subconverter >> /dev/null 2>&1
+  echo -e "${green}Subconverter安装成功!${end}"
 }
 
 
 
 
 update_subconverter_y() {
-        #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
-        new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
-        if [[ ! -n "$new_subconverter_ver" ]]; then
-        echo -e "${red}Subconverter检测版本失败!${end}"
-        exit 1
-        fi
-        if [ ! -d "/tmp/subconverter" ]; then
-        mkdir /tmp/subconverter
-        fi         
-        webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Subconverter下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Subconverter下载成功!${end}" 
-        cd /tmp/subconverter
-        rm -rf /srv/subconverter/subconverter
-        rm -rf /srv/subconverter/all_base.tpl
-        rm -rf /srv/subconverter/profiles/Loyalsoldier.ini
-        rm -rf /srv/subconverter/profiles/yuanlam.ini
-        webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
-        echo -e "${green}all_base.tpl下载成功${end}"
-        webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
-        echo -e "${green}Loyalsoldier.ini下载成功${end}"	
-        webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
-        echo -e "${green}yuanlam.ini下载成功${end}"
-        tar zxvf subconverter.tar.gz >> /dev/null 2>&1
-        mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
-        chmod 777 /srv/subconverter/subconverter
-        rm -rf /tmp/subconverter
-        supervisorctl restart subconverter >> /dev/null 2>&1
-        echo -e "${green}Subconverter升级成功，请重新运行脚本!${end}" && exit 0
-
+  #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
+  new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
+  if [[ ! -n "$new_subconverter_ver" ]]; then
+    echo -e "${red}Subconverter检测版本失败!${end}"
+    exit 1
+  fi
+  if [ ! -d "/tmp/subconverter" ]; then
+    mkdir /tmp/subconverter
+  fi         
+  webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Subconverter下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Subconverter下载成功!${end}" 
+  cd /tmp/subconverter
+  rm -rf /srv/subconverter/subconverter
+  rm -rf /srv/subconverter/all_base.tpl
+  rm -rf /srv/subconverter/profiles/Loyalsoldier.ini
+  rm -rf /srv/subconverter/profiles/yuanlam.ini
+  webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
+  echo -e "${green}all_base.tpl下载成功${end}"
+  webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
+  echo -e "${green}Loyalsoldier.ini下载成功${end}"	
+  webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
+  echo -e "${green}yuanlam.ini下载成功${end}"
+  tar zxvf subconverter.tar.gz >> /dev/null 2>&1
+  mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
+  chmod 777 /srv/subconverter/subconverter
+  rm -rf /tmp/subconverter
+  supervisorctl restart subconverter >> /dev/null 2>&1
+  echo -e "${green}Subconverter升级成功，请重新运行脚本!${end}" && exit 0
 }
 
 
 update_subconverter() {
-        #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
-        new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
-        now_subconverter_ver=$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)
-	      if [[ "${now_subconverter_ver}" != "${new_subconverter_ver}" ]]  ;then
-	      echo -e "Subconverter已有新版本: ${new_subconverter_ver}，当前版本:${now_subconverter_ver}，开始安装"
-        if [[ ! -n "$new_subconverter_ver" ]]; then
-        echo -e "${red}Subconverter检测版本失败!${end}"
-        exit 1
-        fi
-        if [ ! -d "/tmp/subconverter" ]; then
-        mkdir /tmp/subconverter
-        fi         
-        webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
-	      #[ "$result" != "200" ] && echo "文件下载失败！" && exit 1
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}Subconverter下载失败!${end}"
-        exit 1
-        fi
-        echo -e "${green}Subconverter下载成功!${end}" 
-        cd /tmp/subconverter
-        rm -rf /srv/subconverter/subconverter
-        rm -rf /srv/subconverter/all_base.tpl
-        rm -rf /srv/subconverter/profiles/Loyalsoldier.ini
-        rm -rf /srv/subconverter/profiles/yuanlam.ini
-        webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
-        echo -e "${green}all_base.tpl下载成功${end}"
-        webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
-        echo -e "${green}Loyalsoldier.ini下载成功${end}"	
-        webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
-        echo -e "${green}yuanlam.ini下载成功${end}"
-        tar zxvf subconverter.tar.gz >> /dev/null 2>&1
-        mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
-        chmod 777 /srv/subconverter/subconverter
-        rm -rf /tmp/subconverter
-        supervisorctl restart subconverter >> /dev/null 2>&1
-        echo -e "${green}Subconverter升级成功，请重新运行脚本!${end}" && exit 0
-        fi
-
+  #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
+  new_subconverter_ver=$(cat /srv/version  | grep subconverter_v | awk '{print $2}')
+  now_subconverter_ver=$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)
+  if [[ "${now_subconverter_ver}" != "${new_subconverter_ver}" ]]  ;then
+    echo -e "Subconverter已有新版本: ${new_subconverter_ver}，当前版本:${now_subconverter_ver}，开始安装"
+    if [[ ! -n "$new_subconverter_ver" ]]; then
+      echo -e "${red}Subconverter检测版本失败!${end}"
+      exit 1
+    fi
+    if [ ! -d "/tmp/subconverter" ]; then
+      mkdir /tmp/subconverter
+    fi         
+    webget2  /tmp/subconverter/subconverter.tar.gz "${url_cdn}https://github.com/tindy2013/subconverter/releases/download/${new_subconverter_ver}/subconverter_${cpucore3}.tar.gz"
+    #[ "$result" != "200" ] && echo "文件下载失败！" && exit 1
+    if [[ $? -ne 0 ]]; then
+      echo -e "${red}Subconverter下载失败!${end}"
+      exit 1
+    fi
+    echo -e "${green}Subconverter下载成功!${end}" 
+    cd /tmp/subconverter
+    rm -rf /srv/subconverter/subconverter
+    rm -rf /srv/subconverter/all_base.tpl
+    rm -rf /srv/subconverter/profiles/Loyalsoldier.ini
+    rm -rf /srv/subconverter/profiles/yuanlam.ini
+    webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
+    echo -e "${green}all_base.tpl下载成功${end}"
+    webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
+    echo -e "${green}Loyalsoldier.ini下载成功${end}"	
+    webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
+    echo -e "${green}yuanlam.ini下载成功${end}"
+    tar zxvf subconverter.tar.gz >> /dev/null 2>&1
+    mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
+    chmod 777 /srv/subconverter/subconverter
+    rm -rf /tmp/subconverter
+    supervisorctl restart subconverter >> /dev/null 2>&1
+    echo -e "${green}Subconverter升级成功，请重新运行脚本!${end}" && exit 0
+  fi
 }
 
-
 update_shell_y() {
- 	new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
-        webget2  /tmp/aioclash  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}AIOClash下载失败!${end}"
-        exit 1
-        fi
-        echo -e "`date +%F\ %T` AIOClash v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
-        rm -rf /usr/bin/aioclash   
-        mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
-        chmod +x /usr/bin/aioclash >> /dev/null 2>&1
-        echo -e "${green}AIOClash v${new_shell_ver}强制升级成功，请重新运行脚本!${end}" && exit 0
+  new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
+  webget2  /tmp/aioclash  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}AIOClash下载失败!${end}"
+    exit 1
+  fi
+  echo -e "`date +%F\ %T` AIOClash v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
+  rm -rf /usr/bin/aioclash   
+  mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
+  chmod +x /usr/bin/aioclash >> /dev/null 2>&1
+  echo -e "${green}AIOClash v${new_shell_ver}强制升级成功，请重新运行脚本!${end}" && exit 0
 }
 
 update_shell() {
-	new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
-	if [[ "${sh_ver}" != "${new_shell_ver}" ]]; then
-	echo -e "`date +%F\ %T` AIOClash  最新版本: ${new_shell_ver}，当前版本:${sh_ver}"
-        webget2 /tmp/aioclash ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
-        if [[ $? -ne 0 ]]; then
-        echo -e "${red}AIOClash下载失败!${end}"
-        exit 1
-        fi
-        echo -e "`date +%F\ %T` AIOClash v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
-        rm -rf /usr/bin/aioclash   
-        mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
-        chmod +x /usr/bin/aioclash >> /dev/null 2>&1
-        echo -e "${green}AIOClash v${new_shell_ver}升级成功，请重新运行脚本!${end}" && exit 0
-        fi
+  new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
+  if [[ "${sh_ver}" != "${new_shell_ver}" ]]; then
+    echo -e "`date +%F\ %T` AIOClash  最新版本: ${new_shell_ver}，当前版本:${sh_ver}"
+    webget2 /tmp/aioclash ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
+    if [[ $? -ne 0 ]]; then
+      echo -e "${red}AIOClash下载失败!${end}"
+      exit 1
+    fi
+    echo -e "`date +%F\ %T` AIOClash v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
+    rm -rf /usr/bin/aioclash   
+    mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
+    chmod +x /usr/bin/aioclash >> /dev/null 2>&1
+    echo -e "${green}AIOClash v${new_shell_ver}升级成功，请重新运行脚本!${end}" && exit 0
+  fi
 }
 
 install_nftables() {
-     if [ ! -d "/tmp/nftables" ]; then
-     mkdir /tmp/nftables
-     fi
-     mkdir -p /etc/nftables
-     webget2 /tmp/nftables/nftables.zip  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.zip >> /dev/null 2>&1
-     if [[ $? -ne 0 ]]; then
-     echo -e "${red}Nftables下载失败!${end}"
-     exit 1
-     fi
-     echo -e "${green}Nftables下载成功!${end}" 
-     cd /tmp/nftables
-     unzip nftables.zip >> /dev/null 2>&1
-     mv /tmp/nftables/nftables/chnroute.nft /etc/nftables/chnroute.nft
-     mv /tmp/nftables/nftables/private.nft /etc/nftables/private.nft
-     mv /tmp/nftables/nftables/nftables.conf /etc/nftables.conf
-     ip route replace default dev utun table 114  >> /dev/null 2>&1
-     ip rule del fwmark 114514 lookup 114  >> /dev/null 2>&1
-     ip rule add fwmark 114514 lookup 114 >> /dev/null 2>&1
-     sudo sh -c "nft flush ruleset && nft -f /etc/nftables.conf" >> /dev/null 2>&1
-     systemctl enable nftables.service >> /dev/null 2>&1
-     systemctl start nftables.service >> /dev/null 2>&1
-     rm -rf /tmp/nftables
-     echo -e "${green}Nftables安装成功!${end}"
+  if [ ! -d "/tmp/nftables" ]; then
+    mkdir /tmp/nftables
+  fi
+  mkdir -p /etc/nftables
+  webget2 /tmp/nftables/nftables.zip  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.zip >> /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo -e "${red}Nftables下载失败!${end}"
+    exit 1
+  fi
+  echo -e "${green}Nftables下载成功!${end}" 
+  cd /tmp/nftables
+  unzip nftables.zip >> /dev/null 2>&1
+  mv /tmp/nftables/nftables/chnroute.nft /etc/nftables/chnroute.nft
+  mv /tmp/nftables/nftables/private.nft /etc/nftables/private.nft
+  mv /tmp/nftables/nftables/nftables.conf /etc/nftables.conf
+  ip route replace default dev utun table 114  >> /dev/null 2>&1
+  ip rule del fwmark 114514 lookup 114  >> /dev/null 2>&1
+  ip rule add fwmark 114514 lookup 114 >> /dev/null 2>&1
+  sudo sh -c "nft flush ruleset && nft -f /etc/nftables.conf" >> /dev/null 2>&1
+  systemctl enable nftables.service >> /dev/null 2>&1
+  systemctl start nftables.service >> /dev/null 2>&1
+  rm -rf /tmp/nftables
+  echo -e "${green}Nftables安装成功!${end}"
 }
 
 
 install_cron() {
-cat << EOF > /var/spool/cron/crontabs/root
+  cat << EOF > /var/spool/cron/crontabs/root
 */5 * * * * aioclash ping
 */60 * * * * aioclash update
 0 5 * * * aioclash check_ver
 EOF
-chmod 777 /var/spool/cron/crontabs/root
-crontab /var/spool/cron/crontabs/root
-/etc/init.d/cron restart  >> /dev/null 2>&1
+  chmod 777 /var/spool/cron/crontabs/root
+  crontab /var/spool/cron/crontabs/root
+  /etc/init.d/cron restart  >> /dev/null 2>&1
 }
-
 
 #sed -i '$a\0 6 * * * aioclash restart' /var/spool/cron/crontabs/root
 #sed -i  s/'aioclash restart'/'aioclash check_ver'/g  /var/spool/cron/crontabs/root
 
 check_clash_ver() {
-       new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
-       #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
-       now_clash_ver=$(clash -v | awk '{print $2}')
-       if [ ! -d "/srv/version" ]; then
-       cat << EOF > /srv/version
+  new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
+  #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
+  now_clash_ver=$(clash -v | awk '{print $2}')
+  if [ ! -d "/srv/version" ]; then
+    cat << EOF > /srv/version
 clash_v 
 mosdns_v 
 subconverter_v
 EOF
-       fi  
-       sed -i  's/'clash_v'/'"clash_v ${new_clash_ver}"'/g'  /srv/version
-
+  fi  
+  sed -i  's/'clash_v'/'"clash_v ${new_clash_ver}"'/g'  /srv/version
 }
 
 check_mosdns_ver() {
-       new_mosdns_ver=$(wget -qO- https://api.github.com/repos/IrineSistiana/mosdns/releases | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
-       #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-       now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
-       sed -i  's/'mosdns_v'/'"mosdns_v ${new_mosdns_ver}"'/g'  /srv/version
-
+  new_mosdns_ver=$(wget -qO- https://api.github.com/repos/IrineSistiana/mosdns/releases | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+  #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
+  now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
+  sed -i  's/'mosdns_v'/'"mosdns_v ${new_mosdns_ver}"'/g'  /srv/version
 }
 
 check_subconverter_ver() {
-       new_subconverter_ver=$(wget -qO- https://api.github.com/repos/tindy2013/subconverter/releases | grep '"name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
-       #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
-       now_subconverter_ver=$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)
-       sed -i  's/'subconverter_v'/'"subconverter_v ${new_subconverter_ver}"'/g'  /srv/version
-
+  new_subconverter_ver=$(wget -qO- https://api.github.com/repos/tindy2013/subconverter/releases | grep '"name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+  #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
+  now_subconverter_ver=$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)
+  sed -i  's/'subconverter_v'/'"subconverter_v ${new_subconverter_ver}"'/g'  /srv/version
 }
 
 check_ver() {
-update_shell  
-check_clash_ver
-check_mosdns_ver
-check_subconverter_ver
-update_clash
-update_mosdns
-update_subconverter
+  update_shell  
+  check_clash_ver
+  check_mosdns_ver
+  check_subconverter_ver
+  update_clash
+  update_mosdns
+  update_subconverter
 }
 
-
-
-
 check_clash_status2() {
-pIDa=`lsof -i :9090|grep -v "PID" | awk '{print $2}'`
-if [ "$pIDa" = "" ];then
-   return 1
-else
-   return 0
-fi
+  pIDa=`lsof -i :9090|grep -v "PID" | awk '{print $2}'`
+  if [ "$pIDa" = "" ];then
+    return 1
+  else
+    return 0
+  fi
 
 }
 check_ping_status() {
-ping -q -c5 ${gateway} >> /dev/null 2>&1
-if [ $? -eq 0 ];then
-   return 0
-else
-   return 1
-fi
+  ping -q -c5 ${gateway} >> /dev/null 2>&1
+  if [ $? -eq 0 ];then
+    return 0
+  else
+    return 1
+  fi
 }
 
 ping_service() {
-check_clash_status2
-if [ $? -eq 0 ];then
-echo `date +%F\ %T`  "检测Clash端口正常" >> /dev/null 2>&1
-else
-echo `date +%F\ %T`  "检测Clash端口不正常，正在重启服务!" >>/tmp/ping.log
-aioclash restart
-fi
-check_ping_status
-if [ $? -eq 0 ];then
-echo `date +%F\ %T`  "测试${gateway}网关正常" >> /dev/null 2>&1
-else
-echo `date +%F\ %T`  "测试${gateway}网关不正常，正在重启网络服务!" >>/tmp/ping.log
-/etc/init.d/networking restart
-aioclash restart
-fi
+  check_clash_status2
+  if [ $? -eq 0 ];then
+    echo `date +%F\ %T`  "检测Clash端口正常" >> /dev/null 2>&1
+  else
+    echo `date +%F\ %T`  "检测Clash端口不正常，正在重启服务!" >>/tmp/ping.log
+    aioclash restart
+  fi
+  check_ping_status
+  if [ $? -eq 0 ];then
+    echo `date +%F\ %T`  "测试${gateway}网关正常" >> /dev/null 2>&1
+  else
+    echo `date +%F\ %T`  "测试${gateway}网关不正常，正在重启网络服务!" >>/tmp/ping.log
+  /etc/init.d/networking restart
+  aioclash restart
+  fi
 }
-
-
 
 dler_config() {
-    read -e -p "是否使用dler订阅? [Y/n] :" yn
-    [[ -z "${yn}" ]] && yn="y"
-    if [[ $yn == [Yy] ]]; then
+  read -e -p "是否使用dler订阅? [Y/n] :" yn
+  [[ -z "${yn}" ]] && yn="y"
+  if [[ $yn == [Yy] ]]; then
     read -e -p "请输入dler订阅TOKEN:" token
-    fi
-    if [ ! "$token" ];then
+  fi
+  if [ ! "$token" ];then
     if [ ! -d "/srv/clash" ]; then
-    mkdir /srv/clash
+      mkdir /srv/clash
     fi    
-    mv /root/config.yaml /srv/clash/config.yaml     
+      mv /root/config.yaml /srv/clash/config.yaml     
     else
-    dler_clash_config
-    fi    
+      dler_clash_config
+  fi    
 }
 
-
-
 update_config () {
-    update_clash_config
-    update_mosdns_config
-    update_subconverter_config
-    }
+  update_clash_config
+  update_mosdns_config
+  update_subconverter_config
+}
 
 update_clash_config () {
-    update_shell
-    echo -e "${green}更新clash配置!${end}"	 
-    mv /srv/clash/config.yaml /tmp/clash_config.yaml.`date "+%Y.%m.%d.%H:%M"`
-    rm -rf /srv/clash/*.yaml
-    webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-    dler_clash_config
-    aioclash restart_clash
-   
-    }
-
-
-
+  update_shell
+  echo -e "${green}更新clash配置!${end}"	 
+  mv /srv/clash/config.yaml /tmp/clash_config.yaml.`date "+%Y.%m.%d.%H:%M"`
+  rm -rf /srv/clash/*.yaml
+  webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+  dler_clash_config
+  aioclash restart_clash
+}
 
 update_mosdns_config () {
-     update_shell
-     echo -e "${green}更新mosdns配置!${end}"	
-     mv /srv/mosdns/config.yaml /tmp/mosdns_config.yaml.`date "+%Y.%m.%d.%H:%M"`
-     webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-     echo -e "${green}config.yaml下载成功${end}"	     
-     webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
-     echo -e "${green}geoip.dat下载成功${end}"	
-     webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-     echo -e "${green}geosite.dat下载成功${end}"
-     aioclash restart_mosdns
-    }
+  update_shell
+  echo -e "${green}更新mosdns配置!${end}"	
+  mv /srv/mosdns/config.yaml /tmp/mosdns_config.yaml.`date "+%Y.%m.%d.%H:%M"`
+  webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
+  echo -e "${green}config.yaml下载成功${end}"	     
+  webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
+  echo -e "${green}geoip.dat下载成功${end}"	
+  webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+  echo -e "${green}geosite.dat下载成功${end}"
+  aioclash restart_mosdns
+}
 
 update_subconverter_config () {
-     update_shell
-     echo -e "${green}更新Subconverter配置!${end}"	
-     mv /srv/subconverter/base/all_base.tpl /tmp/subconverter_all_base.tpl.`date "+%Y.%m.%d.%H:%M"`
-     mv /srv/subconverter/profiles/Loyalsoldier.ini /tmp/subconverter_Loyalsoldier.ini.`date "+%Y.%m.%d.%H:%M"`
-     mv /srv/subconverter/profiles/yuanlam.ini /tmp/subconverter_yuanlam.ini.`date "+%Y.%m.%d.%H:%M"`
-     webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
-     echo -e "${green}all_base.tpl下载成功${end}"
-     webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
-     echo -e "${green}Loyalsoldier.ini下载成功${end}"	
-     webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
-     echo -e "${green}yuanlam.ini下载成功${end}"
-     aioclash restart_subconverter
-    }
-
+  update_shell
+  echo -e "${green}更新Subconverter配置!${end}"	
+  mv /srv/subconverter/base/all_base.tpl /tmp/subconverter_all_base.tpl.`date "+%Y.%m.%d.%H:%M"`
+  mv /srv/subconverter/profiles/Loyalsoldier.ini /tmp/subconverter_Loyalsoldier.ini.`date "+%Y.%m.%d.%H:%M"`
+  mv /srv/subconverter/profiles/yuanlam.ini /tmp/subconverter_yuanlam.ini.`date "+%Y.%m.%d.%H:%M"`
+  webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
+  echo -e "${green}all_base.tpl下载成功${end}"
+  webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
+  echo -e "${green}Loyalsoldier.ini下载成功${end}"	
+  webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
+  echo -e "${green}yuanlam.ini下载成功${end}"
+  aioclash restart_subconverter
+}
 
 install() {
-    getcpucore
-    getcpucore2
-    getcpucore3
-    check_clash_status2    
-    if [[ $? == 0 ]]; then
+  getcpucore
+  getcpucore2
+  getcpucore3
+  check_clash_status2    
+  if [[ $? == 0 ]]; then
     echo -e "${green}AIOClash已安装"
     exit 1
-    else
+  else
     echo "---------------------------------------"		
     echo -e "${green}       AIOClash 一键安装"
     echo -e "${green}按照提示输入IP,子网,网关"
@@ -1548,14 +1519,14 @@ install() {
     echo -e "${green}Clash控制面板:http://${ip_add}:9090/ui/"		
     echo "---------------------------------------"
     reboot_show_menu
-    fi  
+  fi  
 }
 
 getipv4(){
-	ipv4=$(wget -qO- -4 -t1 -T2 members.3322.org/dyndns/getip)
-	#IP_address=$(wget -qO- -t1 -T2 http://freeapi.ipip.net/${ipv4}|sed 's/\"//g;s/,//g;s/\[//g;s/\]//g')
-	if [[ -z "${ipv4}" ]]; then
-		ipv4=$(wget -qO- -4 -t1 -T2 api.ip.sb/ip)
+  ipv4=$(wget -qO- -4 -t1 -T2 members.3322.org/dyndns/getip)
+  #IP_address=$(wget -qO- -t1 -T2 http://freeapi.ipip.net/${ipv4}|sed 's/\"//g;s/,//g;s/\[//g;s/\]//g')
+  if [[ -z "${ipv4}" ]]; then
+    ipv4=$(wget -qO- -4 -t1 -T2 api.ip.sb/ip)
 		#IP_address=$(wget -qO- -t1 -T2 http://freeapi.ipip.net/${ipv4}|sed 's/\"//g;s/,//g;s/\[//g;s/\]//g')
 		if [[ -z "${ipv4}" ]]; then
 			ipv4=$(wget -qO- -4 -t1 -T2 members.3322.org/dyndns/getip)
@@ -1568,8 +1539,8 @@ getipv4(){
 }
 
 get_IP_address(){
-	if [[ ! -z ${ipv4} ]]; then
-		for((integer_1 = ${user_IP_total}; integer_1 >= 1; integer_1--))
+  if [[ ! -z ${ipv4} ]]; then
+    for((integer_1 = ${user_IP_total}; integer_1 >= 1; integer_1--))
 		do
 			IP=$(echo "${ipv4}" |sed -n "$integer_1"p)
 			IP_address=$(wget -qO- -t1 -T2 http://freeapi.ipip.net/${ipv4}|sed 's/\"//g;s/,//g;s/\[//g;s/\]//g')
@@ -1579,177 +1550,170 @@ get_IP_address(){
 	fi
 }
 
-
 before_show_menu() {
-    echo -n -e "${yellow}按回车返回主菜单:${end}" && read temp
-    show_menu
+  echo -n -e "${yellow}按回车返回主菜单:${end}" && read temp
+  show_menu
 }
 
 reboot_show_menu() {
-    echo -n -e "${yellow}按回车重启系统!${end}"  && read temp	
-    reboot          
+  echo -n -e "${yellow}按回车重启系统!${end}"  && read temp	
+  reboot          
 }
 
 
 
 restart_clash() {
-    supervisorctl restart clash >> /dev/null 2>&1
-    sleep 2
-    check_clash_status
-    if [[ $? == 0 ]]; then
+  supervisorctl restart clash >> /dev/null 2>&1
+  sleep 2
+  check_clash_status
+  if [[ $? == 0 ]]; then
     echo -e "${green}Clash 重启成功!${end}"
-    else
+  else
     echo -e "${red}重启失败!${end}"
-    fi
-    if [[ $# == 0 ]]; then
+  fi
+  if [[ $# == 0 ]]; then
     before_show_menu
-    fi
+  fi
 }
 
 
 restart_mosdns() {
-    supervisorctl restart mosdns >> /dev/null 2>&1
-    sleep 2
-    check_mosdns_status
-    if [[ $? == 0 ]]; then
+  supervisorctl restart mosdns >> /dev/null 2>&1
+  sleep 2
+  check_mosdns_status
+  if [[ $? == 0 ]]; then
     echo -e "${green}Mosdns 重启成功!${end}"
-    else
+  else
     echo -e "${red}重启失败!${end}"
-    fi
-    if [[ $# == 0 ]]; then
+  fi
+  if [[ $# == 0 ]]; then
     before_show_menu
-    fi
+  fi
 }
 
 restart_subconverter() {
-    supervisorctl restart subconverter >> /dev/null 2>&1
-    sleep 2
-    check_subconverter_status
-    if [[ $? == 0 ]]; then
+  supervisorctl restart subconverter >> /dev/null 2>&1
+  sleep 2
+  check_subconverter_status
+  if [[ $? == 0 ]]; then
     echo -e "${green}Subconverter 重启成功!${end}"
-    else
+  else
     echo -e "${red}重启失败!${end}"
-    fi
-    if [[ $# == 0 ]]; then
+  fi
+  if [[ $# == 0 ]]; then
     before_show_menu
-    fi
+  fi
 }
 
 
 status() {
-    supervisorctl status clash
-    if [[ $# == 0 ]]; then
-    before_show_menu
-    fi
+  supervisorctl status clash
+  if [[ $# == 0 ]]; then
+  before_show_menu
+  fi
 }
 
-
-
 show_status() {
-    show_clash_status
-    show_mosdns_status
-    show_subconverter_status
-
+  show_clash_status
+  show_mosdns_status
+  show_subconverter_status
 }
 
 restart_all() {
-    supervisorctl restart clash >> /dev/null 2>&1
-    supervisorctl restart mosdns >> /dev/null 2>&1
-    supervisorctl restart subconverter >> /dev/null 2>&1
-    echo -e "${green}AIOClash 重启成功!${end}"
+  supervisorctl restart clash >> /dev/null 2>&1
+  supervisorctl restart mosdns >> /dev/null 2>&1
+  supervisorctl restart subconverter >> /dev/null 2>&1
+  echo -e "${green}AIOClash 重启成功!${end}"
 }
 
-
 check_install() {
-    check_clash_status2    
-    if [[ $? != 0 ]]; then
+  check_clash_status2    
+  if [[ $? != 0 ]]; then
     echo -e "${green}AIOClash未安装，请先安装再使用AIOClash!"
     exit 1
-    fi
+  fi
 }
 
 show_clash_status() {
-    check_clash_status
-    if [[ $? == 0 ]]; then
+  check_clash_status
+  if [[ $? == 0 ]]; then
     echo -e "${yellow} Clash 状态: ${green}已运行${end}"
-    else
+  else
     echo -e "${yellow} Clash 状态: ${red}未运行${end}"
-    fi
+  fi
 }
 
 check_clash_status() {
-    temp=$(supervisorctl status clash | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
-    if [[ x"${temp}" == x"RUNNING" ]]; then
-        return 0
-    else
-        return 1
-    fi
+  temp=$(supervisorctl status clash | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
+  if [[ x"${temp}" == x"RUNNING" ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 show_mosdns_status() {
-    check_mosdns_status
-    if [[ $? == 0 ]]; then
+  check_mosdns_status
+  if [[ $? == 0 ]]; then
     echo -e "${yellow}Mosdns 状态: ${green}已运行${end}"
-    else
+  else
     echo -e "${yellow}Mosdns 状态: ${red}未运行${end}"
-    fi
+  fi
 }
 check_mosdns_status() {
-    temp=$(supervisorctl status mosdns | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
-    if [[ x"${temp}" == x"RUNNING" ]]; then
-        return 0
-    else
-        return 1
-    fi
+  temp=$(supervisorctl status mosdns | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
+  if [[ x"${temp}" == x"RUNNING" ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 show_subconverter_status() {
-    check_subconverter_status
-    if [[ $? == 0 ]]; then
+  check_subconverter_status
+  if [[ $? == 0 ]]; then
     echo -e "${yellow}Subconverter 状态: ${green}已运行${end}"
-    else
+  else
     echo -e "${yellow}Subconverter 状态: ${red}未运行${end}"
-    fi
-}
-check_subconverter_status() {
-    temp=$(supervisorctl status subconverter | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
-    if [[ x"${temp}" == x"RUNNING" ]]; then
-        return 0
-    else
-        return 1
-    fi
+  fi
 }
 
+check_subconverter_status() {
+  temp=$(supervisorctl status subconverter | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
+  if [[ x"${temp}" == x"RUNNING" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
 
 check_disk_status() {
-   echo -e "${yellow}剩余空间:${end} $(df -h /srv | awk '{print $4}' | sed 1d )${yellow}    架构:${end} ${cpucore2}"
+  echo -e "${yellow}剩余空间:${end} $(df -h /srv | awk '{print $4}' | sed 1d )${yellow}    架构:${end} ${cpucore2}"
 
 }
 
-
-
 show_usage() {
-    echo -e "${blueb}AIOClash 管理脚本 V${sh_ver}  "
-    echo "-------------------------------------------------"
-    echo -e "${green}aioclash                      - 显示管理菜单"
-    echo -e "${green}aioclash install              - 安装 AIOClash"    
-    echo -e "${green}aioclash restart_clash        - 重启 Clash"
-    echo -e "${green}aioclash restart_mosdns       - 重启 Mosdns"
-    echo -e "${green}aioclash restart_subconverter - 重启 Subconverter"
-    echo -e "${green}aioclash restart              - 重启 AIOClash"
-    echo -e "${green}aioclash status               - 查看运行状态"
-    echo -e "${green}aioclash logs                 - 查看 Clash 日志"    
-    echo -e "${green}aioclash update_kernel        - 更新 Debian 内核"
-    echo -e "${green}aioclash update_clash         - 更新 Clash"
-    echo -e "${green}aioclash update_mosdns        - 更新 Mosdns"
-    echo -e "${green}aioclash update_subconverter  - 更新 Subconverter"
-    echo -e "${green}aioclash update_config        - 更新 AIOClash配置"
-    echo -e "${green}aioclash update               - 更新 AIOClash 管理脚本"
-    echo "-------------------------------------------------"
+  echo -e "${blueb}AIOClash 管理脚本 V${sh_ver}  "
+  echo "-------------------------------------------------"
+  echo -e "${green}aioclash                      - 显示管理菜单"
+  echo -e "${green}aioclash install              - 安装 AIOClash"    
+  echo -e "${green}aioclash restart_clash        - 重启 Clash"
+  echo -e "${green}aioclash restart_mosdns       - 重启 Mosdns"
+  echo -e "${green}aioclash restart_subconverter - 重启 Subconverter"
+  echo -e "${green}aioclash restart              - 重启 AIOClash"
+  echo -e "${green}aioclash status               - 查看运行状态"
+  echo -e "${green}aioclash logs                 - 查看 Clash 日志"    
+  echo -e "${green}aioclash update_kernel        - 更新 Debian 内核"
+  echo -e "${green}aioclash update_clash         - 更新 Clash"
+  echo -e "${green}aioclash update_mosdns        - 更新 Mosdns"
+  echo -e "${green}aioclash update_subconverter  - 更新 Subconverter"
+  echo -e "${green}aioclash update_config        - 更新 AIOClash配置"
+  echo -e "${green}aioclash update               - 更新 AIOClash 管理脚本"
+  echo "-------------------------------------------------"
 }
 
 show_menu() {
-    echo -e "
+  echo -e "
   ${lightblueb}AIOClash ${yellow}管理脚本${end}
   ${green}q. ${redb}退出脚本${end}
 ———————————————————————————
@@ -1767,102 +1731,100 @@ show_menu() {
   ${green}10. 更新 ${end}Clash配置
   ${green}11. 更新 ${end}Mosdns配置
   ${green}12. 更新 ${end}Subconverter配置"
-    echo -e "———————————————————————————"
-    getipv4
-    getcpucore
-    getcpucore2
-    getcpucore3
-    show_status
-    echo -e "———————————————————————————"
-    update_shell
-    update_clash
-    update_mosdns
-    update_subconverter
-    check_disk_status
-    echo -e "    ${yellow}Internet: ${end}${local_ip} > ${ipv4}"     
-    echo -e "       ${yellow}Clash: ${end}$(clash -v | awk '{print $2}') >  ${new_clash_ver}"
-    echo -e "      ${yellow}Mosdns: ${end}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_mosdns_ver}"
-    echo -e "${yellow}Subconverter: ${end}$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_subconverter_ver}"
-    echo -e "    ${yellow}AIOClash: ${end}v${sh_ver}     >  v${new_shell_ver}" ${end}    
-    echo && read -p "请输入选择 [1-9]: " num
+  echo -e "———————————————————————————"
+  getipv4
+  getcpucore
+  getcpucore2
+  getcpucore3
+  show_status
+  echo -e "———————————————————————————"
+  update_shell
+  update_clash
+  update_mosdns
+  # update_subconverter
+  check_disk_status
+  echo -e "${yellow}Internet:   ${end}${local_ip} > ${ipv4}"     
+  echo -e "${yellow}Clash:      ${end}$(clash -v | awk '{print $2}') >  ${new_clash_ver}"
+  echo -e "${yellow}Mosdns:     ${end}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_mosdns_ver}"
+  # echo -e "${yellow}Subconverter: ${end}$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_subconverter_ver}"
+  echo -e "${yellow}AIOClash:   ${end}v${sh_ver}     >  v${new_shell_ver}" ${end}    
+  echo && read -p "请输入选择 [1-9]: " num
 
-    case "${num}" in
-        q) exit 1
-        ;;
-        1) restart_clash &&before_show_menu
-        ;;
-        2) restart_mosdns &&before_show_menu
-        ;;
-        3) restart_subconverter &&before_show_menu
-        ;;        
-        4) restart_all &&before_show_menu   
-        ;;
-        5) tail -f /tmp/clash.log       
-        ;;
-        6) update_shell_y
-        ;;
-        7) update_clash_y
-        ;;                
-        8) update_mosdns_y
-        ;;
-        9) update_subconverter_y
-        ;;                   
-        10) update_clash_config
-        ;;
-        11) update_mosdns_config
-        ;;
-        12) update_subconverter_config
-        ;;                    
-        *) echo -e "${red}请输入正确的数字 [1-9]${end}" &&before_show_menu
-        ;;
-    esac
+  case "${num}" in
+    q) exit 1
+  ;;
+    1) restart_clash &&before_show_menu
+  ;;
+    2) restart_mosdns &&before_show_menu
+  ;;
+    3) restart_subconverter &&before_show_menu
+  ;;        
+    4) restart_all &&before_show_menu   
+  ;;
+    5) tail -f /tmp/clash.log       
+  ;;
+    6) update_shell_y
+  ;;
+    7) update_clash_y
+  ;;                
+    8) update_mosdns_y
+  ;;
+    9) update_subconverter_y
+  ;;                   
+    10) update_clash_config
+  ;;
+    11) update_mosdns_config
+  ;;
+    12) update_subconverter_config
+  ;;                    
+    *) echo -e "${red}请输入正确的数字 [1-9]${end}" &&before_show_menu
+  ;;
+  esac
 }
 
-
 if [[ $# > 0 ]]; then
-    case $1 in
-        "update_clash") update_clash_y 0 
-        ;;
-        "update_mosdns") update_mosdns_y 0 
-        ;;
-        "update_subconverter") update_subconverter_y 0 
-        ;;
-        "restart_clash") restart_clash 0
-        ;;
-        "restart_mosdns") restart_mosdns 0
-        ;;
-        "restart_subconverter") restart_subconverter 0
-        ;;
-        "restart") restart_all 0
-        ;;        
-        "logs") tail -f /tmp/clash.log 0
-        ;;   
-        "ping") ping_service 0
-        ;; 
-        "install") install 0
-        ;;
-        "install_ping") update_shell &&install_cron 0
-        ;;                  
-        "status") show_status 0
-        ;;
-        "check_ver") check_ver 0
-        ;;              
-        "update_clash_config") update_clash_config 0
-        ;;
-        "update_mosdns_config") update_mosdns_config 0
-        ;;
-        "update_subconverter_config") update_subconverter_config 0
-        ;;
-        "update_config") update_config 0
-        ;;                   
-        "update") update_shell 0
-        ;;
-        "update_y") update_shell_y 0
-        ;;                           
-        *) show_usage
-        ;;
+  case $1 in
+    "update_clash") update_clash_y 0 
+  ;;
+    "update_mosdns") update_mosdns_y 0 
+  ;;
+    "update_subconverter") update_subconverter_y 0 
+  ;;
+    "restart_clash") restart_clash 0
+  ;;
+    "restart_mosdns") restart_mosdns 0
+  ;;
+    "restart_subconverter") restart_subconverter 0
+  ;;
+    "restart") restart_all 0
+  ;;        
+     "logs") tail -f /tmp/clash.log 0
+  ;;   
+    "ping") ping_service 0
+  ;; 
+    "install") install 0
+  ;;
+    "install_ping") update_shell &&install_cron 0
+  ;;                  
+    "status") show_status 0
+  ;;
+    "check_ver") check_ver 0
+  ;;              
+    "update_clash_config") update_clash_config 0
+  ;;
+    "update_mosdns_config") update_mosdns_config 0
+  ;;
+    "update_subconverter_config") update_subconverter_config 0
+  ;;
+    "update_config") update_config 0
+  ;;                   
+    "update") update_shell 0
+  ;;
+    "update_y") update_shell_y 0
+  ;;                           
+    *) show_usage
+  ;;
     esac
-else
+  else
     show_menu
 fi
-
