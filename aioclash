@@ -182,8 +182,8 @@ port: 7890                        # HTTP代理端口
 socks-port: 7891                  # SOCKS代理端口
 redir-port: 7892                  # 透明代理端口（for Linux or MacOS）不能更改
 mixed-port: 7893                  # 集成端口，http与socks
-#authentication:                   # 验证
-#  - "user:user"                 # http与socks的账号跟密码，推荐使用
+#authentication:                  # 验证
+#  - "user:user"                  # http与socks的账号跟密码，推荐使用
 allow-lan: true                   # 允许局域网连接
 mode: Script                      # Rule or Script    # 工作模式（有Global全局，Rule规则，Direct直连,Script脚本）
 log-level: info                   # 日志级别（info / warning / error / debug / silent）
@@ -948,7 +948,7 @@ echo -e "${green}软件安装完成!${end}"
 }
 
 install_clash() {
-     #new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep clash_v | awk '{print $2}')
+     #new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
      new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
      if [[ ! -n "$new_clash_ver" ]]; then
      echo -e "${red}Clash检测版本失败!${end}"
@@ -968,7 +968,7 @@ install_clash() {
      mv /tmp/clash/clash /usr/bin/clash
      chmod +x /usr/bin/clash
      setcap cap_net_bind_service=+ep /usr/bin/clash
-     webget2  /tmp/dashboard.tar.gz  ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/clash/dashboard.tar.gz
+     webget2  /tmp/dashboard.tar.gz  ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/clash/dashboard.tar.gz
      if [[ $? -ne 0 ]]; then
      echo -e "${red}UI下载失败!${end}"
      exit 1
@@ -988,7 +988,7 @@ install_clash() {
 }
 
 update_clash_y() {
-       	#new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep clash_v | awk '{print $2}')
+       	#new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
         new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
         if [[ ! -n "$new_clash_ver" ]]; then
         echo -e "${red}Clash检测版本失败!${end}"
@@ -1014,7 +1014,7 @@ update_clash_y() {
 }
 
 update_clash() {
-       	#new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep clash_v | awk '{print $2}')
+       	#new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
         new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
         now_clash_ver=$(clash -v | awk '{print $2}')
       	if [[ "${now_clash_ver}" != "${new_clash_ver}" ]]  ;then
@@ -1042,7 +1042,7 @@ update_clash() {
 }
 
 install_mosdns() {
-     #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep mosdns_v | awk '{print $2}')
+     #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
      new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
      if [[ ! -n "$new_mosdns_ver" ]]; then
      echo -e "${red}Mosdns检测版本失败!${end}"
@@ -1066,7 +1066,7 @@ install_mosdns() {
      unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
      mv mosdns /usr/bin/mosdns
      chmod 777 /usr/bin/mosdns
-     webget2 /srv/mosdns/config.yaml "${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/mosdns/config.yaml"  
+     webget2 /srv/mosdns/config.yaml "${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
      echo -e "${green}config.yaml下载成功${end}"	     
      webget2 /srv/mosdns/geoip.dat "$url_cdn/https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
      echo -e "${green}geoip.dat下载成功${end}"	
@@ -1083,7 +1083,7 @@ install_mosdns() {
 
 
 update_mosdns_y() {
-        #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep mosdns_v | awk '{print $2}')
+        #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
         new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
         if [[ ! -n "$new_mosdns_ver" ]]; then
         echo -e "${red}Mosdns检测版本失败!${end}"
@@ -1114,7 +1114,7 @@ update_mosdns_y() {
 
 
 update_mosdns() {
-        #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep mosdns_v | awk '{print $2}')
+        #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
         new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
         now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
 	      if [[ "${now_mosdns_ver}" != "${new_mosdns_ver}" ]]  ;then
@@ -1136,7 +1136,7 @@ update_mosdns() {
         cd /tmp/mosdns
         rm -rf /usr/bin/mosdns
         rm -rf /srv/mosdns/config.yaml
-        webget2 /srv/mosdns/config.yaml "${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/mosdns/config.yaml"  
+        webget2 /srv/mosdns/config.yaml "${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
         echo -e "${green}config.yaml下载成功${end}"	
         unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
         mv /tmp/mosdns/mosdns /usr/bin/mosdns
@@ -1149,7 +1149,7 @@ update_mosdns() {
 }
 
 update_shell_y() {
- 	      new_shell_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep version | awk '{print $2}')
+ 	new_shell_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
         webget2  /tmp/clash_ui  $url_cdn/https://raw.githubusercontent.com/fjjonline/c-m/main/clash_ui
         if [[ $? -ne 0 ]]; then
         echo -e "${red}Clash_UI下载失败!${end}"
@@ -1163,19 +1163,19 @@ update_shell_y() {
 }
 
 update_shell() {
-	      new_shell_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep version | awk '{print $2}')
-	      if [[ "${sh_ver}" != "${new_shell_ver}" ]]  ;then
-	      echo -e "`date +%F\ %T` Clash_UI  最新版本: ${new_shell_ver}，当前版本:${sh_ver}"
-        webget2 /tmp/clash_ui $url_cdn/https://raw.githubusercontent.com/fjjonline/c-m/main/clash_ui
+	new_shell_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
+	if [[ "${sh_ver}" != "${new_shell_ver}" ]]; then
+	echo -e "`date +%F\ %T` Clash_UI  最新版本: ${new_shell_ver}，当前版本:${sh_ver}"
+        webget2 /tmp/aioclash $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
         if [[ $? -ne 0 ]]; then
-        echo -e "${red}Clash_UI下载失败!${end}"
+        echo -e "${red}AIOClash下载失败!${end}"
         exit 1
         fi
         echo -e "`date +%F\ %T` Clash_UI v${new_shell_ver} 下载成功!" >> /tmp/update.log  2>&1
-        rm -rf /usr/bin/clash_ui   
-        mv /tmp/clash_ui /usr/bin/clash_ui  >> /dev/null 2>&1
-        chmod +x /usr/bin/clash_ui >> /dev/null 2>&1
-        echo -e "${green}Clash_UI v${new_shell_ver}升级成功，请重新运行脚本!${end}" && exit 0
+        rm -rf /usr/bin/aioclash   
+        mv /tmp/aioclash /usr/bin/aioclash  >> /dev/null 2>&1
+        chmod +x /usr/bin/aioclash >> /dev/null 2>&1
+        echo -e "${green}AIOClash v${new_shell_ver}升级成功，请重新运行脚本!${end}" && exit 0
         fi
 }
 
@@ -1184,7 +1184,7 @@ install_nftables() {
      mkdir /tmp/nftables
      fi
      mkdir -p /etc/nftables
-     webget2 /tmp/nftables/nftables.zip  ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/nftables/nftables.zip >> /dev/null 2>&1
+     webget2 /tmp/nftables/nftables.zip  ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.zip >> /dev/null 2>&1
      if [[ $? -ne 0 ]]; then
      echo -e "${red}Nftables下载失败!${end}"
      exit 1
@@ -1208,9 +1208,9 @@ install_nftables() {
 
 install_cron() {
 cat << EOF > /var/spool/cron/crontabs/root
-*/5 * * * * clash_ui ping
-*/60 * * * * clash_ui update
-0 5 * * * clash_ui check_ver
+*/5 * * * * aioclash ping
+*/60 * * * * aioclash update
+0 5 * * * aioclash check_ver
 EOF
 chmod 777 /var/spool/cron/crontabs/root
 crontab /var/spool/cron/crontabs/root
@@ -1218,12 +1218,12 @@ crontab /var/spool/cron/crontabs/root
 }
 
 
-#sed -i '$a\0 6 * * * clash_ui restart' /var/spool/cron/crontabs/root
-#sed -i  s/'clash_ui restart'/'clash_ui check_ver'/g  /var/spool/cron/crontabs/root
+#sed -i '$a\0 6 * * * aioclash restart' /var/spool/cron/crontabs/root
+#sed -i  s/'aioclash restart'/'aioclash check_ver'/g  /var/spool/cron/crontabs/root
 
 check_clash_ver() {
        new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
-       #new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep clash_v | awk '{print $2}')
+       #new_clash_ver=$( wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
        now_clash_ver=$(clash -v | awk '{print $2}')
        if [ ! -d "/srv/version" ]; then
        cat << EOF > /srv/version
@@ -1237,7 +1237,7 @@ EOF
 
 check_mosdns_ver() {
        new_mosdns_ver=$(wget -qO- https://api.github.com/repos/IrineSistiana/mosdns/releases | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
-       #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/fjjonline/c-m/main/version | grep mosdns_v | awk '{print $2}')
+       #new_mosdns_ver=$(wget -qO- ${url_cdn}/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
        now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
        sed -i  's/'mosdns_v'/'"mosdns_v ${new_mosdns_ver}"'/g'  /srv/version
 
@@ -1278,7 +1278,7 @@ if [ $? -eq 0 ];then
 echo `date +%F\ %T`  "检测Clash端口正常" >> /dev/null 2>&1
 else
 echo `date +%F\ %T`  "检测Clash端口不正常，正在重启服务!" >>/tmp/ping.log
-clash_ui restart
+aioclash restart
 fi
 check_ping_status
 if [ $? -eq 0 ];then
@@ -1286,7 +1286,7 @@ echo `date +%F\ %T`  "测试${gateway}网关正常" >> /dev/null 2>&1
 else
 echo `date +%F\ %T`  "测试${gateway}网关不正常，正在重启网络服务!" >>/tmp/ping.log
 /etc/init.d/networking restart
-clash_ui restart
+aioclash restart
 fi
 }
 
@@ -1322,7 +1322,7 @@ update_clash_config () {
     rm -rf /srv/clash/*.yaml
     webget2 /srv/clash/Country.mmdb ${url_cdn}/https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
     dler_clash_config
-    clash_ui restart_clash
+    aioclash restart_clash
    
     }
 
@@ -1348,11 +1348,11 @@ install() {
     getcpucore2
     check_clash_status2    
     if [[ $? == 0 ]]; then
-    echo -e "${green}Clash_UI已安装"
+    echo -e "${green}AIOClash已安装"
     exit 1
     else
     echo "---------------------------------------"		
-    echo -e "${green}       Clash+Mosdns 一键安装"
+    echo -e "${green}       AIOClash 一键安装"
     echo -e "${green}按照提示输入IP,子网,网关"
     echo -e "${green}dler订阅按照提示输入token"		
     echo -e "${green}请将config.yaml配置文件上传到/root"	
@@ -1372,7 +1372,7 @@ install() {
     install_nftables
     install_cron
     echo "---------------------------------------"
-    echo -e "${green}       Clash+Mosdns 安装成功"
+    echo -e "${green}       AIOClash 安装成功"
     echo -e "${green}Clash配置文件：/srv/clash/config.yaml"
     echo -e "${green}Clash控制面板:http://${ip_add}:9090/ui/"		
     echo "---------------------------------------"
@@ -1524,26 +1524,26 @@ check_disk_status() {
 
 
 show_usage() {
-    echo -e "${blueb}Clash_UI 管理脚本 V${sh_ver} J. "
+    echo -e "${blueb}AIOClash 管理脚本 V${sh_ver} J. "
     echo "-------------------------------------------------"
-    echo -e "${green}clash_ui                      - 显示管理菜单"
-    echo -e "${green}clash_ui install              - 安装 Clash+Mosdns"    
-    echo -e "${green}clash_ui restart_clash        - 重启 Clash"
-    echo -e "${green}clash_ui restart_mosdns       - 重启 Mosdns"
-    echo -e "${green}clash_ui restart              - 重启 Clash+Mosdns"
-    echo -e "${green}clash_ui status               - 查看运行状态"
-    echo -e "${green}clash_ui logs                 - 查看 Clash 日志"    
-    echo -e "${green}clash_ui update_kernel        - 更新 Debian 内核"
-    echo -e "${green}clash_ui update_clash         - 更新 Clash"
-    echo -e "${green}clash_ui update_mosdns        - 更新 Mosdns"
-    echo -e "${green}clash_ui update_config        - 更新 Clash+Mosdns配置"
-    echo -e "${green}clash_ui update               - 更新 Clash_UI 管理脚本"
+    echo -e "${green}aioclash                      - 显示管理菜单"
+    echo -e "${green}aioclash install              - 安装 AIOClash"    
+    echo -e "${green}aioclash restart_clash        - 重启 Clash"
+    echo -e "${green}aioclash restart_mosdns       - 重启 Mosdns"
+    echo -e "${green}aioclash restart              - 重启 AIOClash"
+    echo -e "${green}aioclash status               - 查看运行状态"
+    echo -e "${green}aioclash logs                 - 查看 Clash 日志"    
+    echo -e "${green}aioclash update_kernel        - 更新 Debian 内核"
+    echo -e "${green}aioclash update_clash         - 更新 Clash"
+    echo -e "${green}aioclash update_mosdns        - 更新 Mosdns"
+    echo -e "${green}aioclash update_config        - 更新 Clash+Mosdns配置"
+    echo -e "${green}aioclash update               - 更新 AIOClash 管理脚本"
     echo "-------------------------------------------------"
 }
 
 show_menu() {
     echo -e "
-  ${lightblueb}Clash_UI ${yellow}管理脚本 J.${end}
+  ${lightblueb}AIOClash ${yellow}管理脚本${end}
   ${green}q. ${redb}退出脚本${end}
 ———————————————————————————
   ${green}1. 重启 ${end}Clash
@@ -1552,7 +1552,7 @@ show_menu() {
 ———————————————————————————
   ${green}4. 日志 ${end}Clash
 ———————————————————————————
-  ${green}5. 更新 ${end}Clash_UI
+  ${green}5. 更新 ${end}AIOClash
   ${green}6. 更新 ${end}Clash
   ${green}7. 更新 ${end}Mosdns
   ${green}8. 更新 ${end}Clash配置
