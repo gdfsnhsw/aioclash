@@ -2,7 +2,7 @@
 #======================================================
 #   System Required:  Debian 10+ 
 #   Description: Manage clash
-#   Author: J. 20211221
+#   Author: 2020.01.01
 #======================================================
 
 
@@ -115,22 +115,22 @@ supervisor_config() {
 cat << EOF > /etc/supervisor/supervisord.conf
 ; supervisor config file
 [unix_http_server]
-file=/var/run/supervisor.sock     ;UNIX socket 文件，supervisorctl 会使用
-chmod=0700                        ;socket文件的mode，默认是0700
-;chown=nobody:nogroup             ;socket文件的owner，格式：uid:gid
-;[inet_http_server]                ;HTTP服务器，提供web管理界面
-;port=0.0.0.0:9089                 ;Web管理后台运行的IP和端口，如果开放到公网，需要注意安全性
-;username=admin                    ;登录管理后台的用户名
-;password=admin                    ;登录管理后台的密码
+file=/var/run/supervisor.sock                   ;UNIX socket 文件，supervisorctl 会使用
+chmod=0700                                      ;socket文件的mode，默认是0700
+;chown=nobody:nogroup                           ;socket文件的owner，格式：uid:gid
+;[inet_http_server]                             ;HTTP服务器，提供web管理界面
+;port=0.0.0.0:9089                              ;Web管理后台运行的IP和端口，如果开放到公网，需要注意安全性
+;username=admin                                 ;登录管理后台的用户名
+;password=admin                                 ;登录管理后台的密码
 [supervisord]
-logfile=/tmp/supervisord.log     ;日志文件，默认是 supervisord.log
-pidfile=/var/run/supervisord.pid            ;pid 文件
+logfile=/tmp/supervisord.log                    ;日志文件，默认是 supervisord.log
+pidfile=/var/run/supervisord.pid                ;pid 文件
 childlogdir=/var/log/supervisor
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 [supervisorctl]
 serverurl=unix:///var/run/supervisor.sock 	;通过UNIX socket连接supervisord，路径与unix_http_server部分的file一致
-;serverurl=http://127.0.0.1:9088 						;通过HTTP的方式连接supervisord
+;serverurl=http://127.0.0.1:9088 		;通过HTTP的方式连接supervisord
 [include]
 files = /etc/supervisor/conf.d/*.conf
 EOF
