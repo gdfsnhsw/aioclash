@@ -98,8 +98,6 @@ confirm() {
     fi
 }
 
-
-
 supervisor_config() {
 cat << EOF > /etc/supervisor/supervisord.conf
 ; supervisor config file
@@ -123,8 +121,8 @@ serverurl=unix:///var/run/supervisor.sock       ;通过UNIX socket连接supervis
 [include]
 files = /etc/supervisor/conf.d/*.conf
 EOF
-     sudo supervisorctl update >> /dev/null 2>&1
-     sudo supervisorctl reload >> /dev/null 2>&1
+  sudo supervisorctl update >> /dev/null 2>&1
+  sudo supervisorctl reload >> /dev/null 2>&1
 }
 
 supervisor_clash_config() {
