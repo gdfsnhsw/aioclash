@@ -1491,7 +1491,7 @@ install() {
     read -e -p "输入子网码:" ip_mask
     read -e -p "输入网关:" ip_gw
     read -e -p "输入DNS:" ip_dns
-    dler_config
+#     dler_config
     config_ip_dns
     config_base
     install_debian
@@ -1728,12 +1728,12 @@ show_menu() {
   update_shell
   update_clash
   update_mosdns
-  # update_subconverter
+#   update_subconverter
   check_disk_status
   echo -e "${yellow}Internet:   ${end}${local_ip} > ${ipv4}"     
   echo -e "${yellow}Clash:      ${end}$(clash -v | awk '{print $2}') >  ${new_clash_ver}"
   echo -e "${yellow}Mosdns:     ${end}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_mosdns_ver}"
-  # echo -e "${yellow}Subconverter: ${end}$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_subconverter_ver}"
+#   echo -e "${yellow}Subconverter: ${end}$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_subconverter_ver}"
   echo -e "${yellow}AIOClash:   ${end}v${sh_ver}     >  v${new_shell_ver}" ${end}    
   echo && read -p "请输入选择 [1-9]: " num
 
@@ -1785,7 +1785,7 @@ if [[ $# > 0 ]]; then
   ;;
     "restart") restart_all 0
   ;;        
-     "logs") tail -f /tmp/clash.log 0
+    "logs") tail -f /tmp/clash.log 0
   ;;   
     "ping") ping_service 0
   ;; 
