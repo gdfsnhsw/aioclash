@@ -172,7 +172,7 @@ EOF
 
 supervisor_subconverter_config() {
 cat << EOF > /etc/supervisor/conf.d/subconverter.conf
-[program:subconverter]                                      ;管理mosdns进程
+[program:subconverter]                                      ;管理subconverter进程
 user=root                                                   ;启动进程用户，默认是root
 command=/srv/subconverter/subconverter                      ;程序启动命令
 autostart=true                                              ;在supervisord启动的时候也自动启动
@@ -1239,7 +1239,7 @@ update_subconverter_y() {
         webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
         echo -e "${green}yuanlam.ini下载成功${end}"
         tar zxvf subconverter.tar.gz >> /dev/null 2>&1
-        mv /tmp/subconverter/subconverter /srv/subconverter/subconverter
+        mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
         chmod 777 /srv/subconverter/subconverter
         rm -rf /tmp/subconverter
         supervisorctl restart subconverter >> /dev/null 2>&1
@@ -1280,7 +1280,7 @@ update_subconverter() {
         webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
         echo -e "${green}yuanlam.ini下载成功${end}"
         tar zxvf subconverter.tar.gz >> /dev/null 2>&1
-        mv /tmp/subconverter/subconverter /srv/subconverter/subconverter
+        mv /tmp/subconverter/subconverter/subconverter /srv/subconverter/subconverter
         chmod 777 /srv/subconverter/subconverter
         rm -rf /tmp/subconverter
         supervisorctl restart subconverter >> /dev/null 2>&1
@@ -1865,3 +1865,4 @@ if [[ $# > 0 ]]; then
 else
     show_menu
 fi
+
