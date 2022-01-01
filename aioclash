@@ -971,7 +971,7 @@ install_clash() {
     mv /tmp/clash/clash /usr/bin/clash
     chmod +x /usr/bin/clash
     setcap cap_net_bind_service=+ep /usr/bin/clash
-    webget2  /tmp/dashboard.tar.gz  ${url_cdn}https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip
+    webget2  /tmp/clash/dashboard.zip  ${url_cdn}https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip
     if [[ $? -ne 0 ]]; then
       echo -e "${red}Dashboard下载失败!${end}"
       exit 1
@@ -981,13 +981,15 @@ install_clash() {
       mkdir /srv/clash
     fi 
     webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-    tar zxvf /tmp/dashboard.tar.gz  -C /srv/clash/ >> /dev/null 2>&1
-    rm -rf /tmp/dashboard.tar.gz
+    cd /tmp/clash
+    unzip dashboard.zip >> /dev/null 2>&1
+    mv -f -T /tmp/clash/clash-dashboard-gh-pages /srv/clash/dashboard
+    rm -rf /tmp/clash
     supervisor_clash_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
     echo -e "${green}Clash安装成功!${end}"
-    echo -e "${green}Clash初始化!${end}" &&sleep 30
+    # echo -e "${green}Clash初始化!${end}" &&sleep 30
 }
 
 update_clash_y() {
@@ -1700,25 +1702,19 @@ show_usage() {
 }
 
 uninstall() {
-    systemctl stop clash
-    sleep 0.5
-    systemctl disable clash
+    supervisorctl stop clash >> /dev/null 2>&1
     rm -rf /etc/supervisor/conf.d/clash.conf
     rm -rf /srv/clash
     rm -rf /usr/bin/clash
     rm -rf /tmp/clash.log
 
-    systemctl stop mosdns
-    sleep 0.5
-    systemctl disable mosdns
+    supervisorctl stop mosdns >> /dev/null 2>&1
     rm -rf /etc/supervisor/conf.d/mosdns.conf
     rm -rf /srv/mosdns
     rm -rf /usr/bin/mosdns
     rm -rf /tmp/mosdns.log
 
-    systemctl stop subconverter 
-    sleep 0.5
-    systemctl disable subconverter
+    supervisorctl stop subconverter >> /dev/null 2>&1
     rm -rf /etc/supervisor/conf.d/subconverter.conf
     rm -rf /srv/subconverter
     rm -rf /tmp/subconverter.log
@@ -1737,6 +1733,7 @@ uninstall() {
     echo -e "${red}AIOClash 卸载成功!请手动reboot重启系统${end}"
     exit 0
 }
+
 
 show_menu() {
     echo -e "
@@ -1859,4 +1856,3 @@ if [[ $# > 0 ]]; then
     else
       show_menu
   fi
-
