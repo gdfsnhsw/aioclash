@@ -1351,7 +1351,7 @@ install_subconverter() {
 
     echo -e "${green}Start download Subconverter from ${subconverter_download_url}${end}" 
     webget2 /tmp/subconverter/subconverter.tar.gz "${url_cdn}${subconverter_download_url}"
-    if [ ! -f "/tmp/subconverter/subconverter.zip" ]; then
+    if [ ! -f "/tmp/subconverter/subconverter.tar.gz" ]; then
         echo -e "${red}Failed to download Subconverter.${end}"
         exit 1
     fi
