@@ -1359,8 +1359,8 @@ install_subconverter() {
     rm -rf ${subconverter_bin}
     cd /tmp/subconverter
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
-    mv /tmp/subconverter/subconverter/subconverter ${subconverter_bin}
-    mv /tmp/subconverter/subconverter ${SUBCONVERTER_CORE_PATH}
+    mv subconverter/subconverter ${subconverter_bin}
+    mv subconverter ${SUBCONVERTER_PATH}
     chmod 777 ${subconverter_bin}
 
 # Subconverter all_base.tpl
