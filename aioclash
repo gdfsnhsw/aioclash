@@ -46,7 +46,7 @@ mosdns_bin="${MOSDNS_CORE_PATH}/mosdns"
 mosdns_version_file="${MOSDNS_PATH}/version_mosdns"
 
 SUBCONVERTER_PATH="${AIOCLASH}/subconverter"
-SUBCONVERTER_CORE_PATH="/usr/bin"
+SUBCONVERTER_CORE_PATH="${AIOCLASH}/subconverter"
 subconverter_bin="${SUBCONVERTER_CORE_PATH}/subconverter"
 subconverter_version_file="${SUBCONVERTER_PATH}/version_subconverter"
 
@@ -146,7 +146,7 @@ supervisor_clash_config() {
     cat << EOF > /etc/supervisor/conf.d/clash.conf
 [program:clash]                                             ;管理clash进程
 user=root                                                   ;启动进程用户，默认是root
-command=/usr/bin/clash -d /srv/clash/                       ;程序启动命令
+command=${clash_bin} -d ${CLASH_PATH}/                      ;程序启动命令
 autostart=true                                              ;在supervisord启动的时候也自动启动
 startsecs=10                                                ;启动后确认无异常时间
 autorestart=true                                            ;程序退出后自动重启,可选值:[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启
@@ -178,8 +178,7 @@ supervisor_subconverter_config() {
     cat << EOF > /etc/supervisor/conf.d/subconverter.conf
 [program:subconverter]                                      ;管理subconverter进程
 user=root                                                   ;启动进程用户，默认是root
-directory=/srv/subconverter                                 ;脚本目录
-command=/usr/bin/subconverter                               ;程序启动命令
+command=/srv/subconverter/subconverter                      ;程序启动命令
 autostart=true                                              ;在supervisord启动的时候也自动启动
 startsecs=10                                                ;启动后确认无异常时间
 autorestart=true                                            ;程序退出后自动重启,可选值:[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启
@@ -1359,7 +1358,6 @@ install_subconverter() {
     rm -rf ${subconverter_bin}
     cd /tmp/subconverter
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
-    mv subconverter/subconverter ${subconverter_bin}
     mv subconverter ${AIOCLASH}
     chmod 777 ${subconverter_bin}
 
