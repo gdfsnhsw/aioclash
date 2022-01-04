@@ -993,11 +993,11 @@ install_clash() {
         exit 1
     fi
 
-    rm -rf ${CLASH_CORE_PATH}/clash
+    rm -rf ${clash_bin}
     gunzip /tmp/clash/clash.gz
-    mv /tmp/clash/clash ${CLASH_CORE_PATH}clash
-    chmod +x ${CLASH_CORE_PATH}/clash
-    setcap cap_net_bind_service=+ep ${CLASH_CORE_PATH}/clash
+    mv /tmp/clash/clash ${clash_bin}
+    chmod +x ${clash_bin}
+    setcap cap_net_bind_service=+ep ${clash_bin}
 
 # Clash dashboard
     clash_dashboard_download_url="https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip"
@@ -1165,10 +1165,10 @@ install_mosdns() {
     fi
 
     cd /tmp/mosdns
-    rm -rf ${MOSDNS_CORE_PATH}/mosdns
+    rm -rf ${mosdns_bin}
     unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-    mv mosdns ${MOSDNS_CORE_PATH}/mosdns
-    chmod 777 ${MOSDNS_CORE_PATH}/mosdns
+    mv mosdns ${mosdns_bin}
+    chmod 777 ${mosdns_bin}
 
 # Mosdns Config.yaml
     config_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"
