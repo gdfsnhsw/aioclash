@@ -907,9 +907,9 @@ EOF
 
 getcpucore(){
     cputype=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
-    [ -n "$(echo $cputype | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore="armv7"
-    [ -n "$(echo $cputype | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore="armv8"
-    [ -n "$(echo $cputype | grep -E "linux.*86_64.*")" ] && cpucore="amd64"
+    [ -n "$(echo $cputype | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore="linux-armv7"
+    [ -n "$(echo $cputype | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore="linux-armv8"
+    [ -n "$(echo $cputype | grep -E "linux.*86_64.*")" ] && cpucore="linux-amd64"
 }
 
 getcpucore2(){
@@ -950,45 +950,106 @@ EOF
     echo -e "${green}软件安装完成!${end}"
 }
 
+# install_clash() {
+#     #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
+#     new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
+#     if [[ ! -n "$new_clash_ver" ]]; then
+#       echo -e "${red}Clash检测版本失败!${end}"
+#       exit 1
+#     fi      
+#     if [ ! -d "/tmp/clash" ]; then
+#       mkdir /tmp/clash
+#     fi 
+#     webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
+#     if [[ $? -ne 0 ]]; then
+#       echo -e "${red}Clash下载失败!${end}"
+#       exit 1
+#     fi
+#       echo -e "${green}Clash下载成功!${end}" 
+#     rm -rf /usr/bin/clash
+#     gunzip /tmp/clash/clash.gz
+#     mv /tmp/clash/clash /usr/bin/clash
+#     chmod +x /usr/bin/clash
+#     setcap cap_net_bind_service=+ep /usr/bin/clash
+#     webget2  /tmp/clash/dashboard.zip  ${url_cdn}https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip
+#     if [[ $? -ne 0 ]]; then
+#       echo -e "${red}Dashboard下载失败!${end}"
+#       exit 1
+#     fi
+#     echo -e "${green}Dashboard下载成功!${end}" 
+#     if [ ! -d "/srv/clash" ]; then
+#       mkdir /srv/clash
+#     fi 
+#     webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+#     cd /tmp/clash
+#     unzip dashboard.zip >> /dev/null 2>&1
+#     mv -f -T /tmp/clash/clash-dashboard-gh-pages /srv/clash/dashboard
+#     rm -rf /tmp/clash
+#     supervisor_clash_config
+#     supervisorctl update >> /dev/null 2>&1
+#     supervisorctl restart clash >> /dev/null 2>&1
+#     echo -e "${green}Clash安装成功!${end}"
+#     # echo -e "${green}Clash初始化!${end}" &&sleep 30
+# }
+
 install_clash() {
-    #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
-    new_clash_ver=$(cat /srv/version  | grep clash_v | awk '{print $2}')
-    if [[ ! -n "$new_clash_ver" ]]; then
-      echo -e "${red}Clash检测版本失败!${end}"
-      exit 1
-    fi      
+    clash_premium_url="https://api.github.com/repos/Dreamacro/clash/releases/tags/premium"
+
     if [ ! -d "/tmp/clash" ]; then
       mkdir /tmp/clash
-    fi 
-    webget2 /tmp/clash/clash.gz "${url_cdn}https://github.com/Dreamacro/clash/releases/download/premium/clash-linux-${cpucore}-${new_clash_ver}.gz"
-    if [[ $? -ne 0 ]]; then
-      echo -e "${red}Clash下载失败!${end}"
-      exit 1
     fi
-      echo -e "${green}Clash下载成功!${end}" 
+
+    webget2 /tmp/clash/clash_premium_release.json "${url_cdn}${clash_premium_url}"
+    if [ ! -f "/tmp/clash/clash_premium_release.json" ]; then
+        echo -e "${red}Clash Premium release 下载失败!${end}"
+        exit 1
+    fi
+
+    clash_premium_download_url=$(jq ".assets[${i}].browser_download_url" clash_premium_release.json | tr -d '"' | grep -m1 ${cpucore})
+    if [ "${clash_premium_download_url}" == "" ]; then
+        echo -e "${red}Clash Premium 不兼容!${end}"
+        exit 1
+    fi
+
+    webget2 /tmp/clash/clash.gz "${url_cdn}${clash_premium_download_url}"
+    if [ ! -f "/tmp/clash/clash.gz" ]; then
+        echo -e "${red}Clash Premium 下载失败!${end}"
+        exit 1
+    fi
+    echo -e "${green}Clash Premium 下载成功!${end}" 
     rm -rf /usr/bin/clash
     gunzip /tmp/clash/clash.gz
     mv /tmp/clash/clash /usr/bin/clash
     chmod +x /usr/bin/clash
     setcap cap_net_bind_service=+ep /usr/bin/clash
+
+    if [ ! -d "${CLASH_PATH}" ]; then
+      mkdir ${CLASH_PATH}
+    fi 
+
     webget2  /tmp/clash/dashboard.zip  ${url_cdn}https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip
-    if [[ $? -ne 0 ]]; then
-      echo -e "${red}Dashboard下载失败!${end}"
+    if [ ! -f "/tmp/clash/dashboard.zip" ]; then
+      echo -e "${red}Dashboard 下载失败!${end}"
       exit 1
     fi
-    echo -e "${green}Dashboard下载成功!${end}" 
-    if [ ! -d "/srv/clash" ]; then
-      mkdir /srv/clash
-    fi 
-    webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+    echo -e "${green}Dashboard 下载成功!${end}" 
     cd /tmp/clash
     unzip dashboard.zip >> /dev/null 2>&1
-    mv -f -T /tmp/clash/clash-dashboard-gh-pages /srv/clash/dashboard
+    mv -f -T /tmp/clash/clash-dashboard-gh-pages ${CLASH_PATH}/dashboard
+
+
+
+    webget2 ${CLASH_PATH}/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb
+    if [ ! -f "${CLASH_PATH}/Country.mmdb" ]; then
+      echo -e "${red}Country.mmdb 下载失败!${end}"
+      exit 1
+    fi
+
     rm -rf /tmp/clash
     supervisor_clash_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
-    echo -e "${green}Clash安装成功!${end}"
+    echo -e "${green}Clash 安装成功!${end}"
     # echo -e "${green}Clash初始化!${end}" &&sleep 30
 }
 
