@@ -1032,7 +1032,7 @@ install_clash() {
     supervisor_clash_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
-    echo -e "${green}Clash Install Successfully${end}"
+    echo -e "${yellow}Clash Install Successfully${end}"
 }
 
 update_clash_y() {
@@ -1209,7 +1209,7 @@ install_mosdns() {
     supervisor_mosdns_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart mosdns >> /dev/null 2>&1
-    echo -e "${green}Mosdns Install Successfully${end}"
+    echo -e "${yellow}Mosdns Install Successfully${end}"
 }
 
 update_mosdns_y() {
@@ -1356,14 +1356,8 @@ install_subconverter() {
         exit 1
     fi
 
-#     cd /tmp/subconverter
-#     rm -rf ${subconverter_bin}
-#     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
-#     mv subconverter/subconverter ${subconverter_bin}
-#     mv subconverter ${SUBCONVERTER_CORE_PATH}
-#     chmod 777 ${subconverter_bin}
-
     rm -rf ${subconverter_bin}
+    cd /tmp/subconverter
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
     mv /tmp/subconverter/subconverter/subconverter ${subconverter_bin}
     mv /tmp/subconverter/subconverter ${SUBCONVERTER_CORE_PATH}
@@ -1409,7 +1403,7 @@ install_subconverter() {
     supervisor_subconverter_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart subconverter >> /dev/null 2>&1
-    echo -e "${green}Subconverter Install Successfully${end}"
+    echo -e "${yellow}Subconverter Install Successfully${end}"
 }
 
 update_subconverter_y() {
