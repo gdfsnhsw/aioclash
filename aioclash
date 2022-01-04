@@ -1005,7 +1005,7 @@ install_clash() {
         exit 1
     fi
 
-    clash_premium_download_url=$(jq ".assets[${i}].browser_download_url" clash_premium_release.json | tr -d '"' | grep -m1 ${cpucore})
+    clash_premium_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/clash/clash_premium_release.json | tr -d '"' | grep -m1 ${cpucore})
     if [ "${clash_premium_download_url}" == "" ]; then
         echo -e "${red}Clash Premium 不兼容!${end}"
         exit 1
