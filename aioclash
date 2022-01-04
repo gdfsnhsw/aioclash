@@ -1360,7 +1360,7 @@ install_subconverter() {
     cd /tmp/subconverter
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
     mv subconverter/subconverter ${subconverter_bin}
-    mv subconverter ${SUBCONVERTER_PATH}
+    mv subconverter ${AIOCLASH}
     chmod 777 ${subconverter_bin}
 
 # Subconverter all_base.tpl
