@@ -1151,7 +1151,7 @@ install_mosdns() {
         exit 1
     fi
 
-    mosdns_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/mosnds/mosdns_release.json | tr -d '"' | grep -m1 ${cpucore2})
+    mosdns_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/mosdns/mosdns_release.json | tr -d '"' | grep -m1 ${cpucore2})
     if [ "${mosdns_download_url}" == "" ]; then
         echo -e "${red}No compatible Mosdns for your platform.${end}"
         exit 1
