@@ -38,6 +38,11 @@ CLASH_CORE_PATH="/usr/bin"
 clash_bin="${CLASH_CORE_PATH}/clash"
 clash_version_file="${CLASH_PATH}/version_clash"
 
+MOSDNS_PATH="/srv/mosdns"
+MOSDNS_CORE_PATH="/usr/bin"
+mosdns_bin="${MOSDNS_CORE_PATH}/mosdns"
+mosdns_version_file="${MOSDNS_PATH}/version_mosdns"
+
 webget2(){
     #参数【$1】代表下载目录，【$2】代表在线地址
     #参数【$3】代表输出显示，【$4】不启用重定向
@@ -919,9 +924,9 @@ getcpucore(){
 
 getcpucore2(){
     cputype2=$(uname -ms | tr ' ' '_' | tr '[A-Z]' '[a-z]')
-    [ -n "$(echo $cputype2 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore2="armv7"
-    [ -n "$(echo $cputype2 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore2="arm64"
-    [ -n "$(echo $cputype2 | grep -E "linux.*86_64.*")" ] && cpucore2="amd64"
+    [ -n "$(echo $cputype2 | grep -E "linux.*armv7.*")" ] && [ -n "$(cat /proc/cpuinfo | grep vfp)" ] && cpucore2="linux-armv-7"
+    [ -n "$(echo $cputype2 | grep -E "linux.*aarch64.*|linux.*armv8.*")" ] && cpucore2="linux-arm64"
+    [ -n "$(echo $cputype2 | grep -E "linux.*86_64.*")" ] && cpucore2="linux-amd64"
 }
 
 getcpucore3(){
@@ -956,13 +961,19 @@ EOF
 }
 
 install_clash() {
+
+# Clash Premium core
     clash_premium_url="https://api.github.com/repos/Dreamacro/clash/releases/tags/premium"
 
     if [ ! -d "/tmp/clash" ]; then
       mkdir /tmp/clash
     fi
 
-    echo "${green}Get Clash Premium release information.${end}"
+    if [ ! -d "${CLASH_PATH}" ]; then
+      mkdir ${CLASH_PATH}
+    fi 
+
+    echo -e "${green}Get Clash Premium release information.${end}"
     webget2 /tmp/clash/clash_premium_release.json "${clash_premium_url}"
     if [ ! -f "/tmp/clash/clash_premium_release.json" ]; then
         echo -e "${red}Failed to get Clash Premium release information.${end}"
@@ -981,17 +992,14 @@ install_clash() {
         echo -e "${red}Failed to download Clash Premium.${end}"
         exit 1
     fi
-    # echo -e "${green}Clash Premium 下载成功!${end}" 
-    rm -rf /usr/bin/clash
+
+    rm -rf ${CLASH_CORE_PATH}/clash
     gunzip /tmp/clash/clash.gz
-    mv /tmp/clash/clash /usr/bin/clash
-    chmod +x /usr/bin/clash
-    setcap cap_net_bind_service=+ep /usr/bin/clash
+    mv /tmp/clash/clash ${CLASH_CORE_PATH}clash
+    chmod +x ${CLASH_CORE_PATH}/clash
+    setcap cap_net_bind_service=+ep ${CLASH_CORE_PATH}/clash
 
-    if [ ! -d "${CLASH_PATH}" ]; then
-      mkdir ${CLASH_PATH}
-    fi 
-
+# Clash dashboard
     clash_dashboard_download_url="https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip"
     echo -e "${green}Start download Clash Premium from ${clash_dashboard_download_url}${end}" 
     webget2  /tmp/clash/dashboard.zip  ${url_cdn}${clash_dashboard_download_url}
@@ -999,12 +1007,11 @@ install_clash() {
       echo -e "${red}Failed to download Clash Dashboard.${end}"
       exit 1
     fi
-    # echo -e "${green}Dashboard 下载成功!${end}" 
     cd /tmp/clash
     unzip dashboard.zip >> /dev/null 2>&1
     mv -f -T /tmp/clash/clash-dashboard-gh-pages ${CLASH_PATH}/dashboard
 
-
+# Clash Country.mmdb
     clash_dashboard_download_url="https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb"
     echo -e "${green}Start download Clash Premium from ${clash_dashboard_download_url}${end}" 
     webget2 ${CLASH_PATH}/Country.mmdb ${url_cdn}${clash_dashboard_download_url}
@@ -1018,7 +1025,6 @@ install_clash() {
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
     echo -e "${green}Clash Install Successfully${end}"
-    # echo -e "${green}Clash初始化!${end}" &&sleep 30
 }
 
 update_clash_y() {
@@ -1126,72 +1132,154 @@ update_clash() {
 }
 
 install_mosdns() {
-    #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-    new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
-    if [[ ! -n "$new_mosdns_ver" ]]; then
-      echo -e "${red}Mosdns检测版本失败!${end}"
-      exit 1
-    fi
+
+# Mosdns core
+    mosdns_url="https://api.github.com/repos/IrineSistiana/mosdns/releases/latest"
+
     if [ ! -d "/tmp/mosdns" ]; then
       mkdir /tmp/mosdns
+    fi
+
+    if [ ! -d "${MOSDNS_PATH}" ]; then
+      mkdir ${MOSDNS_PATH}
     fi 
+
+    echo -e "${green}Get Mosdns release information.${end}"
+    webget2 /tmp/mosdns/mosdns_release.json "${mosdns_url}"
+    if [ ! -f "/tmp/mosdns/mosdns_release.json" ]; then
+        echo -e "${red}Failed to get Mosdns release information.${end}"
+        exit 1
+    fi
+
+    mosdns_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/mosnds/mosdns_release.json | tr -d '"' | grep -m1 ${cpucore2})
+    if [ "${mosdns_download_url}" == "" ]; then
+        echo -e "${red}No compatible Mosdns for your platform.${end}"
+        exit 1
+    fi
+
+    echo -e "${green}Start download Mosdns from ${mosdns_download_url}${end}" 
+    webget2 /tmp/mosdns/mosdns.zip "${url_cdn}${mosdns_download_url}"
+    if [ ! -f "/tmp/mosdns/mosdns.zip" ]; then
+        echo -e "${red}Failed to download Mosdns.${end}"
+        exit 1
+    fi
+
     cd /tmp/mosdns
-    if [ ! -d "/srv/mosdns" ]; then
-      mkdir /srv/mosdns
-    fi 
-    webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
-    if [[ $? -ne 0 ]]; then
-      echo -e "${red}Mosdns下载失败!${end}"
+    rm -rf ${MOSDNS_CORE_PATH}/mosdns
+    unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
+    mv mosdns ${MOSDNS_CORE_PATH}/mosdns
+    chmod 777 ${MOSDNS_CORE_PATH}/mosdns
+
+# Mosdns Config.yaml
+    config_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"
+    echo -e "${green}Start download Mosdns Config from ${config_download_url}${end}" 
+    webget2  ${MOSDNS_PATH}/config.yaml  ${url_cdn}${config_download_url}
+    if [ ! -f "${MOSDNS_PATH}/config.yaml" ]; then
+      echo -e "${red}Failed to download Mosdns Config.${end}"
       exit 1
     fi
-    echo -e "${green}Mosdns下载成功!${end}" 
-    cd /tmp/mosdns
-    rm -rf /usr/bin/mosdns
-    unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-    mv mosdns /usr/bin/mosdns
-    chmod 777 /usr/bin/mosdns
-    webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-    echo -e "${green}config.yaml下载成功${end}"	     
-    webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
-    echo -e "${green}geoip.dat下载成功${end}"	
-    webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    echo -e "${green}geosite.dat下载成功${end}"	     
+
+# Mosdns geoip.dat
+    geoip_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    echo -e "${green}Start download Mosdns Geoip from ${geoip_download_url}${end}" 
+    webget2  ${MOSDNS_PATH}/geoip.dat  ${url_cdn}${geoip_download_url}
+    if [ ! -f "${MOSDNS_PATH}/geoip.dat" ]; then
+      echo -e "${red}Failed to download Mosdns Geoip.${end}"
+      exit 1
+    fi
+
+# Mosdns geosite.dat
+    geosite_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    echo -e "${green}Start download Mosdns Geosite from ${geosite_download_url}${end}" 
+    webget2  ${MOSDNS_PATH}/geosite.dat  ${url_cdn}${geosite_download_url}
+    if [ ! -f "${MOSDNS_PATH}/geosite.dat" ]; then
+      echo -e "${red}Failed to download Mosdns Geosite.${end}"
+      exit 1
+    fi
+
     rm -rf /tmp/mosdns
     supervisor_mosdns_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart mosdns >> /dev/null 2>&1
-    echo -e "${green}Mosdns安装成功!${end}"
+    echo -e "${green}Mosdns Install Successfully${end}"
 }
 
 update_mosdns_y() {
-    #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
-    new_mosdns_ver=$(cat /srv/version  | grep mosdns_v | awk '{print $2}')
-    if [[ ! -n "$new_mosdns_ver" ]]; then
-      echo -e "${red}Mosdns检测版本失败!${end}"
-      exit 1
+    if [ ! -f "${mosdns_bin}" ]; then
+      echo "v1.1.1" > ${mosdns_version_file}
     fi
-    if [ ! -d "/tmp/mosdns" ]; then
-      mkdir /tmp/mosdns
-    fi         
-    webget2  /tmp/mosdns/mosdns.zip "${url_cdn}https://github.com/IrineSistiana/mosdns/releases/download/${new_mosdns_ver}/mosdns-linux-${cpucore2}.zip"
-    if [[ $? -ne 0 ]]; then
-      echo -e "${red}Mosdns下载失败!${end}"
-      exit 1
-    fi
-    echo -e "${green}Mosdns下载成功!${end}" 
-    cd /tmp/mosdns
-    rm -rf /usr/bin/mosdns
-    rm -rf /srv/mosdns/config.yaml
-    webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-    echo -e "${green}config.yaml下载成功${end}"	
-    unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
-    mv mosdns /usr/bin/mosdns
-    chmod 777 /usr/bin/mosdns
-    rm -rf /tmp/mosdns
-    supervisorctl restart mosdns >> /dev/null 2>&1
-    echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
-}
 
+    if [ ! -f "${mosdns_version_file}" ]; then
+      echo $(${mosdns_bin} -v 2>/dev/null | awk '{print $1}'| cut -d'-' -f1) > ${mosdns_version_file}
+    fi
+    local_mosdns_version=$(cat "${mosdns_version_file}")
+
+    #date -d "${local_mosdns_version}-00:00" +%s
+    echo -e "${green}Locale Mosdns: ${local_mosdns_version}.${end}"
+    # echo "Please download the latest version from https://api.github.com/repos/IrineSistiana/mosdns/releases/latest manually."
+
+    [ -f /tmp/mosdns_release.json ] && rm /tmp/mosdns_release.json
+    webget2 /tmp/mosdns_release.json https://api.github.com/repos/IrineSistiana/mosdns/releases/latest echooff
+    if [ ! -f /tmp/mosdns_release.json ]; then
+      echo -e "${red}Failed to get the release information of Mosdns.${end}"
+      exit 1
+    fi
+
+    remote_mosdns_version=$(jq '.name' /tmp/mosdns_release.json | tr -d '"' | awk '{print $1}'| cut -d'-' -f1)
+    if [ $(echo ${local_mosdns_version} | tr -d "v"".") -ge $(echo ${remote_mosdns_version} | tr -d "v"".") ]; then
+      echo -e "${green}Mosdns ${local_mosdns_version} is up to date.${end}"
+      exit 2
+    else
+      echo -e "${green}Found a new version of Mosdns ${remote_mosdns_version}.${end}"
+    fi
+
+    [ -f /tmp/mosdns_release_assets ] && rm /tmp/mosdns_release_assets
+    jq '.assets[].name' /tmp/mosdns_release.json > /tmp/mosdns_release_assets
+    if [ ! -f /tmp/mosdns_release_assets ]; then
+      echo -e "${red}Failed to get the release information of Mosdns.${end}"
+      rm /tmp/mosdns_release.json
+      exit 1
+    fi
+
+    i=0
+    while read line ; do
+      l=$(echo $line | grep "${cpucore2}")
+      if [ ! -z $l ]; then
+        break
+      fi
+      i=$(( i+1 ))
+    done < /tmp/mosdns_release_assets
+
+    rm /tmp/mosdns_release_assets
+    remote_mosdns_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/mosdns_release.json | tr -d '"')
+    rm /tmp/mosdns_release.json 
+
+    echo "Start downloading Mosdns ${remote_mosdns_version} from ${remote_mosdns_download_url}"
+    [ -f "${MOSDNS_CORE_PATH}/mosdns.zip" ] && rm "${MOSDNS_CORE_PATH}/mosdns.zip"
+    webget2 ${MOSDNS_CORE_PATH}/mosdns.zip ${url_cdn}${remote_mosdns_download_url}
+    if [ ! -f "${MOSDNS_CORE_PATH}/mosdns.zip" ]; then
+      echo -e "${red}Failed to download Mosdns.${end}"
+      echo -e "${red}Please download and upload it to ${MOSDNS_CORE_PATH} manually.${end}"
+      exit 1
+    fi
+
+    [ -f ${MOSDNS_CORE_PATH}/mosdns.old ] && rm ${MOSDNS_CORE_PATH}/mosdns.old
+    [ -f ${mosdns_bin} ] && mv ${mosdns_bin} ${MOSDNS_CORE_PATH}/mosdns.old
+    unzip "${MOSDNS_CORE_PATH}/mosdns.zip" "mosdns" -d ${MOSDNS_CORE_PATH} >> /dev/null 2>&1 && chmod +x ${mosdns_bin} && ${mosdns_bin} -v
+    [ -f ${MOSDNS_CORE_PATH}/mosdns.zip ] && rm "${MOSDNS_CORE_PATH}/mosdns.zip"
+    if [ $? -eq 1 ]; then
+      echo -e "${red}Failed to download Mosdns.${end}"
+      echo -e "${red}Please try to download it again.${end}"
+      [ -f ${MOSDNS_CORE_PATH}/mosdns.zip ] && rm "${MOSDNS_CORE_PATH}/mosdns.zip"
+      [ -f ${mosdns_bin} ] && rm ${mosdns_bin}
+      mv ${MOSDNS_CORE_PATH}/mosdns.old ${mosdns_bin}
+      exit 1
+    fi
+
+    new_mosdns_version=$(${mosdns_bin} -v 2>/dev/null | awk '{print $1}'| cut -d'-' -f1)
+    echo ${new_mosdns_version} > ${mosdns_version_file}
+    echo -e "${green}Mosdns has been updated to ${new_mosdns_version}.${end}"
+}
 
 update_mosdns() {
     #new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
@@ -1226,8 +1314,6 @@ update_mosdns() {
       echo -e "${green}Mosdns升级成功，请重新运行脚本!${end}" && exit 0
     fi
 }
-
-
 
 install_subconverter() {
     #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
@@ -1266,9 +1352,6 @@ install_subconverter() {
     supervisorctl restart subconverter >> /dev/null 2>&1
     echo -e "${green}Subconverter安装成功!${end}"
 }
-
-
-
 
 update_subconverter_y() {
     #new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
