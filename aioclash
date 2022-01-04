@@ -34,7 +34,8 @@ local_ip=$(ip a 2>&1 | grep -w 'inet' | grep 'global' | grep -E '\ 1(92|0|72|00|
 eth_n=$(ip --oneline link show up | grep -v "lo" | awk '{print$2;exit}' | cut -d':' -f1 | cut -d'@' -f1)
 
 CLASH_PATH="/srv/clash"
-clash_bin="/usr/bin/clash"
+CLASH_CORE_PATH="/usr/bin"
+clash_bin="${CLASH_CORE_PATH}/clash"
 clash_version_file="${CLASH_PATH}/version_clash"
 
 webget2(){
@@ -961,24 +962,26 @@ install_clash() {
       mkdir /tmp/clash
     fi
 
+    echo "${green}Get Clash Premium release information.${end}"
     webget2 /tmp/clash/clash_premium_release.json "${clash_premium_url}"
     if [ ! -f "/tmp/clash/clash_premium_release.json" ]; then
-        echo -e "${red}Clash Premium release 下载失败!${end}"
+        echo -e "${red}Failed to get Clash Premium release information.${end}"
         exit 1
     fi
 
     clash_premium_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/clash/clash_premium_release.json | tr -d '"' | grep -m1 ${cpucore})
     if [ "${clash_premium_download_url}" == "" ]; then
-        echo -e "${red}Clash Premium 不兼容!${end}"
+        echo -e "${red}No compatible Clash Premium for your platform.${end}"
         exit 1
     fi
 
+    echo -e "${green}Start download Clash Premium from ${clash_premium_download_url}${end}" 
     webget2 /tmp/clash/clash.gz "${url_cdn}${clash_premium_download_url}"
     if [ ! -f "/tmp/clash/clash.gz" ]; then
-        echo -e "${red}Clash Premium 下载失败!${end}"
+        echo -e "${red}Failed to download Clash Premium.${end}"
         exit 1
     fi
-    echo -e "${green}Clash Premium 下载成功!${end}" 
+    # echo -e "${green}Clash Premium 下载成功!${end}" 
     rm -rf /usr/bin/clash
     gunzip /tmp/clash/clash.gz
     mv /tmp/clash/clash /usr/bin/clash
@@ -989,21 +992,24 @@ install_clash() {
       mkdir ${CLASH_PATH}
     fi 
 
-    webget2  /tmp/clash/dashboard.zip  ${url_cdn}https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip
+    clash_dashboard_download_url="https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip"
+    echo -e "${green}Start download Clash Premium from ${clash_dashboard_download_url}${end}" 
+    webget2  /tmp/clash/dashboard.zip  ${url_cdn}${clash_dashboard_download_url}
     if [ ! -f "/tmp/clash/dashboard.zip" ]; then
-      echo -e "${red}Dashboard 下载失败!${end}"
+      echo -e "${red}Failed to download Clash Dashboard.${end}"
       exit 1
     fi
-    echo -e "${green}Dashboard 下载成功!${end}" 
+    # echo -e "${green}Dashboard 下载成功!${end}" 
     cd /tmp/clash
     unzip dashboard.zip >> /dev/null 2>&1
     mv -f -T /tmp/clash/clash-dashboard-gh-pages ${CLASH_PATH}/dashboard
 
 
-
-    webget2 ${CLASH_PATH}/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb
+    clash_dashboard_download_url="https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb"
+    echo -e "${green}Start download Clash Premium from ${clash_dashboard_download_url}${end}" 
+    webget2 ${CLASH_PATH}/Country.mmdb ${url_cdn}${clash_dashboard_download_url}
     if [ ! -f "${CLASH_PATH}/Country.mmdb" ]; then
-      echo -e "${red}Country.mmdb 下载失败!${end}"
+      echo -e "${red}Failed to download Country.mmdb.${end}"
       exit 1
     fi
 
@@ -1011,7 +1017,7 @@ install_clash() {
     supervisor_clash_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
-    echo -e "${green}Clash 安装成功!${end}"
+    echo -e "${green}Clash Install Successfully${end}"
     # echo -e "${green}Clash初始化!${end}" &&sleep 30
 }
 
@@ -1026,28 +1032,28 @@ update_clash_y() {
     local_clash_version=$(cat "${clash_version_file}")
 
     #date -d "${local_clash_version}-00:00" +%s
-    echo "Locale Clash Premium: ${local_clash_version}."
+    echo -e "${green}Locale Clash Premium: ${local_clash_version}.${end}"
     # echo "Please download the latest version from https://github.com/Dreamacro/clash/releases/tag/premium manually."
 
     [ -f /tmp/clash_premium_release.json ] && rm /tmp/clash_premium_release.json
-    curl -s -o /tmp/clash_premium_release.json https://api.github.com/repos/Dreamacro/clash/releases/tags/premium
+    webget2 /tmp/clash_premium_release.json https://api.github.com/repos/Dreamacro/clash/releases/tags/premium echooff
     if [ ! -f /tmp/clash_premium_release.json ]; then
-      echo "Failed to get the release information of Clash Premium."
+      echo -e "${red}Failed to get the release information of Clash Premium.${end}"
       exit 1
     fi
 
     remote_clash_version=$(jq '.name' /tmp/clash_premium_release.json | tr -d '"' | awk '{print $2}')
     if [ $(echo ${local_clash_version} | tr -d ".") -ge $(echo ${remote_clash_version} | tr -d ".") ]; then
-      echo "Clash Premium ${local_clash_version} is up to date."
+      echo -e "${green}Clash Premium ${local_clash_version} is up to date.${end}"
       exit 2
     else
-      echo "Found a new version of Clash Premium ${remote_clash_version}."
+      echo -e "${green}Found a new version of Clash Premium ${remote_clash_version}.${end}"
     fi
 
     [ -f /tmp/clash_premium_release_assets ] && rm /tmp/clash_premium_release_assets
     jq '.assets[].name' /tmp/clash_premium_release.json > /tmp/clash_premium_release_assets
     if [ ! -f /tmp/clash_premium_release_assets ]; then
-      echo "Failed to get the release information of Clash Premium."
+      echo -e "${red}Failed to get the release information of Clash Premium.${end}"
       rm /tmp/clash_premium_release.json
       exit 1
     fi
@@ -1064,29 +1070,31 @@ update_clash_y() {
     rm /tmp/clash_premium_release_assets
     remote_clash_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/clash_premium_release.json | tr -d '"')
     rm /tmp/clash_premium_release.json 
-    echo "Start downloading Clash Premium ${remote_clash_version} from ${remote_clash_download_url}..."
-    [ -f "${CLASH_PATH}/clash.gz" ] && rm "${CLASH_PATH}/clash.gz"
-    curl -L -# -o "${CLASH_PATH}/clash.gz" "https://git.o8.cx/${remote_clash_download_url}"
-    if [ ! -f "${CLASH_PATH}/clash.gz" ]; then
-      echo "Failed to download Clash Premium."
-      echo "Please download and upload it to ${CLASH_PATH} manually."
-      exit 1
-    fi
-    [ -f ${CLASH_PATH}/clash.old ] && rm ${CLASH_PATH}/clash.old
-    [ -f ${clash_bin} ] && mv ${clash_bin} ${CLASH_PATH}/clash.old
-    gzip -d "${CLASH_PATH}/clash.gz" && chmod +x ${clash_bin} && ${clash_bin} -v
-    if [ $? -eq 1 ]; then
-      echo "Failed to download Clash Premium."
-      echo "Please try to re-run this script to download it again."
-      [ -f ${CLASH_PATH}/clash.gz ] && rm "${CLASH_PATH}/clash.gz"
-      [ -f ${clash_bin} ] && rm ${clash_bin}
-      mv ${CLASH_PATH}/clash.old ${clash_bin}
-      exit 1
-    fi
-    new_clash_version=$(${clash_bin} -v 2>/dev/null | awk '{print $2}')
 
+    echo "Start downloading Clash Premium ${remote_clash_version} from ${remote_clash_download_url}..."
+    [ -f "${CLASH_CORE_PATH}/clash.gz" ] && rm "${CLASH_CORE_PATH}/clash.gz"
+    webget2 ${CLASH_CORE_PATH}/clash.gz ${url_cdn}${remote_clash_download_url}
+    if [ ! -f "${CLASH_CORE_PATH}/clash.gz" ]; then
+      echo -e "${red}Failed to download Clash Premium.${end}"
+      echo -e "${red}Please download and upload it to ${CLASH_CORE_PATH} manually.${end}"
+      exit 1
+    fi
+
+    [ -f ${CLASH_CORE_PATH}/clash.old ] && rm ${CLASH_CORE_PATH}/clash.old
+    [ -f ${clash_bin} ] && mv ${clash_bin} ${CLASH_CORE_PATH}/clash.old
+    gzip -d "${CLASH_CORE_PATH}/clash.gz" && chmod +x ${clash_bin} && ${clash_bin} -v
+    if [ $? -eq 1 ]; then
+      echo -e "${red}Failed to download Clash Premium.${end}"
+      echo -e "${red}Please try to download it again.${end}"
+      [ -f ${CLASH_CORE_PATH}/clash.gz ] && rm "${CLASH_CORE_PATH}/clash.gz"
+      [ -f ${clash_bin} ] && rm ${clash_bin}
+      mv ${CLASH_CORE_PATH}/clash.old ${clash_bin}
+      exit 1
+    fi
+
+    new_clash_version=$(${clash_bin} -v 2>/dev/null | awk '{print $2}')
     echo ${new_clash_version} > ${clash_version_file}
-    echo "Clash Premium has been updated to ${new_clash_version}."
+    echo -e "${green}Clash Premium has been updated to ${new_clash_version}.${end}"
 }
 
 update_clash() {
