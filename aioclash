@@ -1736,12 +1736,6 @@ status() {
     fi
 }
 
-show_status() {
-    show_clash_status
-    show_mosdns_status
-    show_subconverter_status
-}
-
 restart_all() {
     supervisorctl restart clash >> /dev/null 2>&1
     supervisorctl restart mosdns >> /dev/null 2>&1
@@ -1757,15 +1751,6 @@ check_install() {
     fi
 }
 
-show_clash_status() {
-    check_clash_status
-    if [[ $? == 0 ]]; then
-      echo -e "${yellow} Clash 状态: ${green}已运行${end}"
-    else
-      echo -e "${yellow} Clash 状态: ${red}未运行${end}"
-    fi
-}
-
 check_clash_status() {
     temp=$(supervisorctl status clash | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
     if [[ x"${temp}" == x"RUNNING" ]]; then
@@ -1775,29 +1760,12 @@ check_clash_status() {
     fi
 }
 
-show_mosdns_status() {
-    check_mosdns_status
-    if [[ $? == 0 ]]; then
-      echo -e "${yellow}Mosdns 状态: ${green}已运行${end}"
-    else
-      echo -e "${yellow}Mosdns 状态: ${red}未运行${end}"
-    fi
-}
 check_mosdns_status() {
     temp=$(supervisorctl status mosdns | awk '{print $2}' | cut -d "(" -f2 | cut -d ")" -f1)
     if [[ x"${temp}" == x"RUNNING" ]]; then
       return 0
     else
       return 1
-    fi
-}
-
-show_subconverter_status() {
-    check_subconverter_status
-    if [[ $? == 0 ]]; then
-      echo -e "${yellow}Subconverter 状态: ${green}已运行${end}"
-    else
-      echo -e "${yellow}Subconverter 状态: ${red}未运行${end}"
     fi
 }
 
@@ -1869,40 +1837,126 @@ uninstall() {
 }
 
 
+getconfig(){
+	echo --------------------------------------------------
+	echo -e "\033[30;46m欢迎使用All In One Clash！\033[0m"
+	clash_getconfig
+	mosdns_getconfig
+	subconverter_getconfig
+	echo --------------------------------------------------
+}
+
+clash_getconfig(){
+	PID=$(pidof clash)
+	if [ -n "$PID" ];then
+		run="\033[32m已运行\033[0m"
+		VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
+		time=$(supervisorctl status clash | awk '{print $6,$7,$8}')
+		echo -e "Clash"$run"：\033[44m"$time"\033[0m,内存占用：\033[44m"$VmRSS"\033[0m"
+	else
+		run="\033[31m没有运行\033[0m"
+		echo -e "Clash"$run""
+	fi
+}
+
+mosdns_getconfig(){
+
+	PID=$(pidof mosdns)
+	if [ -n "$PID" ];then
+		run="\033[32m已运行\033[0m"
+		VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
+		time=$(supervisorctl status mosdns | awk '{print $6,$7,$8}')
+		echo -e "Mosdns"$run"：\033[44m"$time"\033[0m,内存占用：\033[44m"$VmRSS"\033[0m"
+	else
+		run="\033[31m没有运行\033[0m"
+		echo -e "Mosdns"$run""
+	fi
+}
+
+subconverter_getconfig(){
+
+	PID=$(pidof subconverter)
+	if [ -n "$PID" ];then
+		run="\033[32m已运行\033[0m"
+		VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
+		time=$(supervisorctl status subconverter | awk '{print $6,$7,$8}')
+		echo -e "Subconverter"$run"：\033[44m"$time"\033[0m,内存占用：\033[44m"$VmRSS"\033[0m"
+		
+	else
+		run="\033[31m没有运行\033[0m"
+		echo -e "Subconverter"$run""
+	fi
+}
+
+
+update_menu() {
+    echo -e "--------------------------------------------------"
+    echo -e "\033[30;43m欢迎使用更新/卸载功能\033[0m"
+    echo -e "--------------------------------------------------"
+    echo -e "1. ${green}更新 ${end}AIOClash"
+    echo -e "2. ${green}更新 ${end}Clash"
+    echo -e "3. ${green}更新 ${end}Mosdns"
+    echo -e "4. ${green}更新 ${end}Subconverter"
+    echo -e "5. ${green}更新 ${end}Clash配置"
+    echo -e "6. ${green}更新 ${end}Mosdns配置"
+    echo -e "7. ${green}更新 ${end}Subconverter配置"
+    echo -e "8. ${green}卸载 ${end}AIOClash"
+    echo -e "--------------------------------------------------"
+    echo -e "0. 返回上级菜单"
+    echo -e "--------------------------------------------------"
+    echo && read -p "请输入选择 [1-6]: " num
+
+    case "${num}" in
+      1) update_shell_y
+    ;;
+      2) update_clash_y
+    ;;                
+      3) update_mosdns_y
+    ;;
+      4) update_subconverter_y
+    ;;                   
+      5) update_clash_config
+    ;;
+      6) update_mosdns_config
+    ;;
+      7) update_subconverter_config
+    ;;
+      8) uninstall
+    ;;
+      0) show_menu
+    ;;             
+      *) echo -e "${red}请输入正确的数字 [1-9]${end}" &&before_show_menu
+    ;;
+    esac
+}
+
 show_menu() {
-    echo -e "
-    ${lightblueb}AIOClash ${yellow}管理脚本${end}
-    ${green}q. ${redb}退出脚本${end}
-  ———————————————————————————
-    ${green}1. 重启 ${end}Clash
-    ${green}2. 重启 ${end}Mosdns
-    ${green}3. 重启 ${end}Subconverter
-    ${green}4. 重启 ${end}AIOClash
-  ———————————————————————————
-    ${green}5. 日志 ${end}Clash
-  ———————————————————————————
-    ${green}6. 更新 ${end}AIOClash
-    ${green}7. 更新 ${end}Clash
-    ${green}8. 更新 ${end}Mosdns
-    ${green}9. 更新 ${end}Subconverter
-    ${green}10. 更新 ${end}Clash配置
-    ${green}11. 更新 ${end}Mosdns配置
-    ${green}12. 更新 ${end}Subconverter配置
-    ${green}13. 卸载 ${end}AIOClash"
-    echo -e "———————————————————————————"
+    getconfig
+#    echo -e "${lightblueb}AIOClash ${yellow}管理脚本${end}"
+    echo -e "q. ${redb}退出脚本${end}"
+    echo -e "--------------------------------------------------"
+    echo -e "1. ${green}重启 ${end}Clash"
+    echo -e "2. ${green}重启 ${end}Mosdns"
+    echo -e "3. ${green}重启 ${end}Subconverter"
+    echo -e "4. ${green}重启 ${end}AIOClash"
+    echo -e "--------------------------------------------------"
+    echo -e "5. ${green}日志 ${end}Clash"
+    echo -e "--------------------------------------------------"
+    echo -e "6. ${green}更新/卸载 ${end}AIOClash"
+    echo -e "--------------------------------------------------"
     getipv4
     getcpucore
     getcpucore2
     getcpucore3
-    show_status
-    echo -e "———————————————————————————"
+#    show_status
+#    echo -e "--------------------------------------------------"
     update_shell
-    check_disk_status
-    echo -e "${yellow}Internet:   ${end}${local_ip} > ${ipv4}"     
-    echo -e "${yellow}Clash:      ${end}$(clash -v | awk '{print $2}') >  ${new_clash_ver}"
-    echo -e "${yellow}Mosdns:     ${end}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_mosdns_ver}"
+#    check_disk_status
+    # echo -e "${yellow}Internet:   ${end}${local_ip} > ${ipv4}"     
+    # echo -e "${yellow}Clash:      ${end}$(clash -v | awk '{print $2}') >  ${new_clash_ver}"
+    # echo -e "${yellow}Mosdns:     ${end}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_mosdns_ver}" 
     # echo -e "${yellow}Subconverter: ${end}$(subconverter -v | awk '{print $1}'| cut -d'-' -f1)     >  ${new_subconverter_ver}"
-    echo -e "${yellow}AIOClash:   ${end}v${sh_ver}     >  v${new_shell_ver}" ${end}    
+    # echo -e "${yellow}AIOClash:   ${end}v${sh_ver}     >  v${new_shell_ver}" ${end}    
     echo && read -p "请输入选择 [1-9]: " num
 
     case "${num}" in
@@ -1917,23 +1971,9 @@ show_menu() {
       4) restart_all &&before_show_menu   
     ;;
       5) tail -f /tmp/clash.log       
-    ;;
-      6) update_shell_y
-    ;;
-      7) update_clash_y
-    ;;                
-      8) update_mosdns_y
-    ;;
-      9) update_subconverter_y
-    ;;                   
-      10) update_clash_config
-    ;;
-      11) update_mosdns_config
-    ;;
-      12) update_subconverter_config
-    ;;
-      13) uninstall
-    ;;               
+    ;;      
+      6) update_menu 
+    ;;      
       *) echo -e "${red}请输入正确的数字 [1-9]${end}" &&before_show_menu
     ;;
     esac
@@ -1983,7 +2023,7 @@ if [[ $# > 0 ]]; then
     ;;                         
       *) show_usage
     ;;
-      esac
-    else
+    esac
+else
       show_menu
-  fi
+fi
