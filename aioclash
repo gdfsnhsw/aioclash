@@ -34,21 +34,21 @@ netmask=$(cat /etc/network/interfaces |grep netmask | awk '{print $2}' | head -n
 local_ip=$(ip a 2>&1 | grep -w 'inet' | grep 'global' | grep -E '\ 1(92|0|72|00|1)\.' | sed 's/.*inet.//g' | sed 's/\/[0-9][0-9].*$//g' | head -n 1);
 eth_n=$(ip --oneline link show up | grep -v "lo" | awk '{print$2;exit}' | cut -d':' -f1 | cut -d'@' -f1)
 
-AIOCLASH="/srv"
+AIOCLASH_PATH="/srv"
 aioclash_path="/usr/bin/aioclash"
 
-CLASH_PATH="${AIOCLASH}/clash"
+CLASH_PATH="${AIOCLASH_PATH}/clash"
 CLASH_CORE_PATH="/usr/bin"
 clash_bin="${CLASH_CORE_PATH}/clash"
 clash_version_file="${CLASH_PATH}/version_clash"
 
-MOSDNS_PATH="${AIOCLASH}/mosdns"
+MOSDNS_PATH="${AIOCLASH_PATH}/mosdns"
 MOSDNS_CORE_PATH="/usr/bin"
 mosdns_bin="${MOSDNS_CORE_PATH}/mosdns"
 mosdns_version_file="${MOSDNS_PATH}/version_mosdns"
 
-SUBCONVERTER_PATH="${AIOCLASH}/subconverter"
-SUBCONVERTER_CORE_PATH="${AIOCLASH}/subconverter"
+SUBCONVERTER_PATH="${AIOCLASH_PATH}/subconverter"
+SUBCONVERTER_CORE_PATH="${AIOCLASH_PATH}/subconverter"
 subconverter_bin="${SUBCONVERTER_CORE_PATH}/subconverter"
 subconverter_version_file="${SUBCONVERTER_PATH}/version_subconverter"
 
@@ -1260,8 +1260,7 @@ update_mosdns_y() {
 
     rm /tmp/mosdns_release_assets
     remote_mosdns_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/mosdns_release.json | tr -d '"')
-    rm /tmp/mosdns_release.json 
-
+    rm /tmp/mosdns_release.json
     echo "Start downloading Mosdns ${remote_mosdns_version} from ${remote_mosdns_download_url}"
     [ -f "${MOSDNS_CORE_PATH}/mosdns.zip" ] && rm "${MOSDNS_CORE_PATH}/mosdns.zip"
     webget2 ${MOSDNS_CORE_PATH}/mosdns.zip ${url_cdn}${remote_mosdns_download_url}
@@ -1302,8 +1301,6 @@ install_subconverter() {
       mkdir ${SUBCONVERTER_PATH}
     fi 
 
-
-
     echo -e "${green}Get Subconverter release information.${end}"
     webget2 /tmp/subconverter/subconverter_release.json "${subconverter_url}"
     if [ ! -f "/tmp/subconverter/subconverter_release.json" ]; then
@@ -1327,7 +1324,7 @@ install_subconverter() {
     rm -rf ${subconverter_bin}
     cd /tmp/subconverter
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
-    mv subconverter ${AIOCLASH}
+    mv subconverter ${AIOCLASH_PATH}
     chmod 777 ${subconverter_bin}
 
     if [ ! -f "${subconverter_version_file}" ]; then
@@ -1402,11 +1399,28 @@ update_subconverter_y() {
       exit 2
     fi
 
+    [ -f /tmp/subconverter_release_assets ] && rm /tmp/subconverter_release_assets
+    jq '.assets[].name' /tmp/subconverter_release.json > /tmp/subconverter_release_assets
+    if [ ! -f /tmp/subconverter_release_assets ]; then
+      echo -e "${red}Failed to get the release information of Subconverter.${end}"
+      rm /tmp/subconverter_release.json
+      exit 1
+    fi
+
+    i=0
+    while read line ; do
+      l=$(echo $line | grep "${cpucore3}")
+      if [ ! -z $l ]; then
+        break
+      fi
+      i=$(( i+1 ))
+    done < /tmp/subconverter_release_assets
+
+    rm /tmp/subconverter_release_assets
     remote_subconverter_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/subconverter_release.json | tr -d '"' | grep -m1 ${cpucore3})
-    # rm /tmp/subconverter_release.json
+    rm /tmp/subconverter_release.json
     echo "Start download Subconverter v${remote_subconverter_version} from ${remote_subconverter_download_url}..."
     [ -f "/tmp/subconverter.tar.gz" ] && rm "/tmp/subconverter.tar.gz"
-    # curl -L -# -o "/tmp/subconverter.tar.gz" "${url_cdn}${remote_subconverter_download_url}"
     webget2 /tmp/subconverter.tar.gz "${url_cdn}${remote_subconverter_download_url}"
     if [ ! -f "/tmp/subconverter.tar.gz" ]; then
       echo -e "${red}Failed to download subconverter.${end}"
@@ -2139,7 +2153,7 @@ uninstall() {
     rm -rf /etc/nftables/private.nft
     rm -rf /etc/nftables.conf
 
-    rm -rf ${AIOCLASH}/version
+    rm -rf ${AIOCLASH_PATH}/version
     rm -rf ${aioclash_path}
 
     echo -e "${red}AIOClash 卸载成功!请手动重启系统${end}"
