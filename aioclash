@@ -1302,9 +1302,7 @@ install_subconverter() {
       mkdir ${SUBCONVERTER_PATH}
     fi 
 
-    if [ ! -f "${subconverter_version_file}" ]; then
-      echo 0 > ${subconverter_version_file}
-    fi
+
 
     echo -e "${green}Get Subconverter release information.${end}"
     webget2 /tmp/subconverter/subconverter_release.json "${subconverter_url}"
@@ -1312,9 +1310,6 @@ install_subconverter() {
         echo -e "${red}Failed to get Subconverter release information.${end}"
         exit 1
     fi
-
-    remote_subconverter_version=$(jq '.name' /tmp/subconverter/subconverter_release.json | tr -d '"' | tr -d 'v')
-    echo "${remote_subconverter_version}" > "${subconverter_version_file}"
 
     subconverter_download_url=$(jq ".assets[${i}].browser_download_url" /tmp/subconverter/subconverter_release.json | tr -d '"' | grep -m1 ${cpucore3})
     if [ "${subconverter_download_url}" == "" ]; then
@@ -1334,6 +1329,12 @@ install_subconverter() {
     tar -zxvf subconverter.tar.gz  >> /dev/null 2>&1
     mv subconverter ${AIOCLASH}
     chmod 777 ${subconverter_bin}
+
+    if [ ! -f "${subconverter_version_file}" ]; then
+      echo 0 > ${subconverter_version_file}
+    fi
+    remote_subconverter_version=$(jq '.name' /tmp/subconverter/subconverter_release.json | tr -d '"' | tr -d 'v')
+    echo "${remote_subconverter_version}" > "${subconverter_version_file}"
 
 # Subconverter all_base.tpl
     all_base_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"
