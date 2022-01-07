@@ -23,7 +23,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="4.0.0"
+sh_ver="1.0.1"
 
 url_cdn="https://git.o8.cx/"
 
@@ -1463,6 +1463,15 @@ update_shell_y() {
 
 update_shell() {
     new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
+        if [ ! -d "${AIOCLASH_PATH}/version" ]; then
+      cat << EOF > ${AIOCLASH_PATH}/version
+version 
+clash_v 
+mosdns_v 
+subconverter_v 
+EOF
+    fi  
+    sed -i  's/'version'/'"version ${new_shell_ver}"'/g'  ${AIOCLASH_PATH}/version
     if [[ "${sh_ver}" != "${new_shell_ver}" ]]; then
       echo -e "`date +%F\ %T` AIOClash  最新版本: ${new_shell_ver}，当前版本:${sh_ver}"
       webget2 /tmp/aioclash ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
@@ -1523,13 +1532,6 @@ check_clash_ver() {
     new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
     #new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
     now_clash_ver=$(clash -v | awk '{print $2}')
-    if [ ! -d "/srv/version" ]; then
-      cat << EOF > /srv/version
-clash_v 
-mosdns_v 
-subconverter_v
-EOF
-    fi  
     sed -i  's/'clash_v'/'"clash_v ${new_clash_ver}"'/g'  /srv/version
 }
 
@@ -2231,7 +2233,7 @@ show_menu() {
     echo -e "q. 退出脚本"
     echo -e "--------------------------------------------------"
 
-    # update_shell
+    update_shell
     echo && read -p "请输入选择 [1-8]: " num
 
     case "${num}" in
@@ -2295,7 +2297,11 @@ setup_menu() {
 
 update_menu() {
     echo -e "${green}正在检查更新...${end}"
-    check_ver
+    new_clash_ver=$(cat ${AIOCLASH_PATH}/version  | grep clash_v | awk '{print $2}'| cut -d'-' -f1)
+    new_mosdns_ver=$(cat ${AIOCLASH_PATH}/version  | grep mosdns_v | awk '{print $2}'| cut -d'-' -f1)
+    new_subconverter_ver=$(cat ${AIOCLASH_PATH}/version  | grep subconverter_v | awk '{print $2}'| cut -d'-' -f1)
+    new_shell_ver=$(cat ${AIOCLASH_PATH}/version  | grep version | awk '{print $2}'| cut -d'-' -f1)
+    # check_ver
     echo -e "--------------------------------------------------"
     echo -e "\033[30;43m欢迎使用更新/卸载功能\033[0m"
     echo -e "--------------------------------------------------"
