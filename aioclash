@@ -23,7 +23,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="1.0.2"
+sh_ver="1.1.0"
 
 url_cdn="https://git.o8.cx/"
 
@@ -1509,9 +1509,8 @@ install_nftables() {
 
 install_cron() {
     cat << EOF > /var/spool/cron/crontabs/root
-*/5 * * * * aioclash ping
-*/60 * * * * aioclash update
-0 5 * * * aioclash check_ver
+*/5 * * * * aioclash ping >/dev/null 2>&1 #每5分钟检测clash端口
+0 5 * * * aioclash check_ver >/dev/null 2>&1 #每天的5点0分更新AIOClash
 EOF
     chmod 777 /var/spool/cron/crontabs/root
     crontab /var/spool/cron/crontabs/root
@@ -1661,13 +1660,13 @@ install() {
       echo -e "${green}AIOClash已安装"
       exit 1
     else
-      echo "---------------------------------------"    
+      echo -----------------------------------------------    
       echo -e "${green}       AIOClash 一键安装"
       echo -e "${green}按照提示输入IP,网关,DNS"
       # echo -e "${green}dler订阅按照提示输入token"   
       # echo -e "${green}请将config.yaml配置文件上传到/root"  
       check_disk_status
-      echo "---------------------------------------"
+      echo -----------------------------------------------
       update_shell
 
       # dler_config
@@ -1680,11 +1679,11 @@ install() {
       supervisor_config    
       install_nftables
       install_cron
-      echo "---------------------------------------"
+      echo -----------------------------------------------
       echo -e "${green}       AIOClash 安装成功"
       echo -e "${green}Clash配置文件:${yaml_path}"
       echo -e "${green}Clash控制面板:http://${ip_add}:9090/ui/"
-      echo "---------------------------------------"
+      echo -----------------------------------------------
       reboot_show_menu
     fi  
 }
@@ -1904,7 +1903,6 @@ getlink(){
     echo -e "\033[44m如果你需要将多个订阅合成一份, 使用 '|' 来分隔链接, 可以按以下操作:\033[0m"
     echo -e "\033[33mhttps://dler.cloud/aaa|trojan://密码@域名:443#名称\033[0m"
     echo -----------------------------------------------
-    stty erase '^H'
     read -e -p "请输入完整链接 > " link
     test=$(echo $link | grep "://")
     if [ -n "$link" -a -n "$test" ];then
@@ -1949,7 +1947,8 @@ EOF
 }
 
 keepyaml2(){
-    if [ "$PIDS" = "" ]; then
+    PID=$(pidof clash)
+    if [ -f "$PID" ];then
       echo -----------------------------------------------
       echo -e clash启动失败，还原配置文件
       cp -r $bak_yaml_path $yaml_path
@@ -1957,7 +1956,7 @@ keepyaml2(){
       supervisorctl restart clash
     else
       echo -----------------------------------------------
-      echo -e clash启动成功，http://localhost:9090/ui/
+      echo -e "Clash控制面板:\033[36;4mhttp://${local_ip}:9090/ui/\033[0m"
       echo -----------------------------------------------
     fi
 }
@@ -1991,7 +1990,6 @@ clashcron(){
       setcrontab(){
         #设置具体时间
         echo -----------------------------------------------
-        stty erase '^H'
         read -e -p "请输入小时（0-23） > " num
         if [ -z "$num" ]; then 
           errornum
@@ -2002,7 +2000,6 @@ clashcron(){
         else  
           hour=$num
           echo -----------------------------------------------
-          stty erase '^H'
           read -e -p "请输入分钟（0-59） > " num
           if [ -z "$num" ]; then 
             errornum
@@ -2062,13 +2059,15 @@ clashcron(){
     }
     #定时任务菜单
     echo -----------------------------------------------
-    echo  -e "\033[33m已添加的定时任务:\033[36m"
+    echo  -e "\033[33m已添加的定时任务:\033[35m"
     crontab -l | grep -oE ' #.*' 
     echo -e "\033[0m"-----------------------------------------------
     echo -e " 1 设置\033[33m定时重启\033[0mclash服务"
     echo -e " 2 设置\033[31m定时停止\033[0mclash服务"
     echo -e " 3 设置\033[32m定时开启\033[0mclash服务"
     echo -e " 4 设置\033[33m定时更新\033[0m订阅并重启服务"
+    echo -e " 5 设置\033[34m定时检测\033[0mclash端口并重启服务"
+    echo -e " 6 设置\033[36m定时更新\033[0mAIOClash"
     echo -----------------------------------------------
     echo -e " 0 返回上级菜单" 
     read -e -p "请输入对应数字 > " num
@@ -2093,7 +2092,34 @@ clashcron(){
       clashcron
     elif [ "$num" = 4 ]; then 
       cronname=更新订阅链接
-      cronset="${aioclash_path} getyaml"
+      cronset="aioclash getyaml"
+      setcron 
+      clashcron
+    elif [ "$num" = 5 ]; then 
+      cronname=检测clash端口
+      # cronset="aioclash ping"
+      # setcron 
+      echo -----------------------------------------------
+      echo -e " 输入   1   确认设置:\033[32m$cronname\033[0m定时任务"
+      echo -----------------------------------------------
+      echo -e " 输入   9   \033[31m删除定时任务\033[0m"
+      echo -e " 输入   0   返回上级菜单"
+      echo -----------------------------------------------
+      read -e -p "请输入对应数字 > " num
+      if [ -z "$num" ]; then 
+        errornum
+      elif [ "$num" = 1 ]; then
+        sed -i '$a\*/5 * * * * aioclash ping >/dev/null 2>&1 #每5分钟检测clash端口' /var/spool/cron/crontabs/root
+      elif [ "$num" = 9 ]; then
+        crontab -l > /tmp/conf && sed -i "/$cronname/d" /tmp/conf && crontab /tmp/conf
+        rm -f /tmp/conf
+        echo -----------------------------------------------
+        echo -e "\033[31m定时任务:$cronname已删除!\033[0m"
+      fi
+      clashcron
+    elif [ "$num" = 6 ]; then 
+      cronname=更新AIOClash
+      cronset="aioclash check_ver"
       setcron 
       clashcron
     else
@@ -2105,23 +2131,23 @@ clashcron(){
 
 
 show_usage() {
-    echo -e "${blueb}AIOClash 管理脚本 V${sh_ver}  "
-    echo "-------------------------------------------------"
-    echo -e "${green}aioclash                      - 显示管理菜单"
-    echo -e "${green}aioclash install              - 安装 AIOClash"    
-    echo -e "${green}aioclash restart_clash        - 重启 Clash"
-    echo -e "${green}aioclash restart_mosdns       - 重启 Mosdns"
-    echo -e "${green}aioclash restart_subconverter - 重启 Subconverter"
-    echo -e "${green}aioclash restart              - 重启 AIOClash"
-    echo -e "${green}aioclash status               - 查看运行状态"
-    echo -e "${green}aioclash logs                 - 查看 Clash 日志"    
-    echo -e "${green}aioclash update_kernel        - 更新 Debian 内核"
-    echo -e "${green}aioclash update_clash         - 更新 Clash"
-    echo -e "${green}aioclash update_mosdns        - 更新 Mosdns"
-    echo -e "${green}aioclash update_subconverter  - 更新 Subconverter"
-    echo -e "${green}aioclash update_config        - 更新 AIOClash配置"
-    echo -e "${green}aioclash update               - 更新 AIOClash 管理脚本"
-    echo "-------------------------------------------------"
+    echo -e "${blueb}AIOClash 管理脚本${end}       版本: ${sh_ver}  "
+    echo -----------------------------------------------
+    echo -e "${green}aioclash                      - 显示管理菜单${end}"
+    echo -e "${green}aioclash install              - 安装 AIOClash${end}"    
+    echo -e "${green}aioclash restart_clash        - 重启 Clash${end}"
+    echo -e "${green}aioclash restart_mosdns       - 重启 Mosdns${end}"
+    echo -e "${green}aioclash restart_subconverter - 重启 Subconverter${end}"
+    echo -e "${green}aioclash restart              - 重启 AIOClash${end}"
+    echo -e "${green}aioclash status               - 查看运行状态${end}"
+    echo -e "${green}aioclash logs                 - 查看 Clash 日志${end}"    
+    echo -e "${green}aioclash update_kernel        - 更新 Debian 内核${end}"
+    echo -e "${green}aioclash update_clash         - 更新 Clash${end}"
+    echo -e "${green}aioclash update_mosdns        - 更新 Mosdns${end}"
+    echo -e "${green}aioclash update_subconverter  - 更新 Subconverter${end}"
+    echo -e "${green}aioclash update_config        - 更新 AIOClash配置${end}"
+    echo -e "${green}aioclash update               - 更新 AIOClash 管理脚本${end}"
+    echo -----------------------------------------------
 }
 
 clash_getconfig(){
@@ -2166,14 +2192,14 @@ subconverter_getconfig(){
 
 getconfig(){
     getcpucore
-    echo --------------------------------------------------
+    echo -----------------------------------------------
     echo -e "\033[30;46m欢迎使用All In One Clash!\033[0m      版本：${sh_ver}"
     check_disk_status
     clash_getconfig
     mosdns_getconfig
     subconverter_getconfig
     echo -e "Clash控制面板:\033[36;4mhttp://${local_ip}:9090/ui/\033[0m"
-    echo --------------------------------------------------
+    echo -----------------------------------------------
 }
 
 show_menu() {
@@ -2181,50 +2207,47 @@ show_menu() {
     echo -e "1. ${green}重启 ${end}Clash"
     echo -e "2. ${green}重启 ${end}Mosdns"
     echo -e "3. ${green}重启 ${end}Subconverter"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "4. ${green}导入 ${end}订阅"
     echo -e "5. ${green}设置 ${end}定时"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "6. ${green}重启 ${end}AIOClash"
     echo -e "7. ${green}设置 ${end}AIOClash"
     echo -e "8. ${green}更新/卸载${end} AIOClash"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "q. 退出脚本"
-    echo -e "--------------------------------------------------"
-
-    # update_shell
+    echo -----------------------------------------------
     echo && read -e -p "请输入选择 [1-8]: " num
 
     case "${num}" in
-
-      1) restart_clash &&before_show_menu
+      1)  restart_clash &&before_show_menu
     ;;
-      2) restart_mosdns &&before_show_menu
+      2)  restart_mosdns &&before_show_menu
     ;;
-      3) restart_subconverter &&before_show_menu
+      3)  restart_subconverter &&before_show_menu
     ;;
-      4) getlink
+      4)  getlink
     ;;   
-      5) clashcron
+      5)  clashcron
     ;;   
-      6) restart_all &&before_show_menu   
+      6)  restart_all &&before_show_menu   
     ;;
-      7) setup_menu      
+      7)  setup_menu      
     ;;      
-      8) update_menu 
+      8)  update_menu 
     ;; 
-      q) exit 1
+      q)  exit 1
     ;;     
-      *) echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
+      *)  echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
     ;;
     esac
 }
 
 
 setup_menu() {
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "\033[30;43m欢迎使用功能设置菜单\033[0m"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     getipv4
     # getcpucore
     # getcpucore2
@@ -2234,12 +2257,12 @@ setup_menu() {
     echo -e "${yellow}address:    ${end}${local_ip}"
     echo -e "${yellow}netmask:    ${end}${netmask}"
     echo -e "${yellow}gateway:    ${end}${gateway}"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "1. ${green}日志 ${end}Clash"
     echo -e "2. ${green}更改 ${end}本机地址"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo && read -e -p "请输入选择 [1-2]: " num
     case "${num}" in
       1)  tail -f /tmp/clash.log 
@@ -2256,6 +2279,7 @@ setup_menu() {
 }
 
 update_menu() {
+    echo -e "${green}正在检查更新...${end}"
     if [ ! -f "${AIOCLASH_PATH}/version" ]; then
       cat << EOF > ${AIOCLASH_PATH}/version
 version 
@@ -2263,17 +2287,19 @@ clash_v
 mosdns_v 
 subconverter_v 
 EOF
-    echo -e "${green}正在检查更新...${end}"
-    check_ver
+      check_ver
+    else
+      check_aioclash_ver
     fi
+    
     new_clash_version=$(cat ${AIOCLASH_PATH}/version  | grep clash_v | awk '{print $2}'| cut -d'-' -f1)
     new_mosdns_version=$(cat ${AIOCLASH_PATH}/version  | grep mosdns_v | awk '{print $2}'| cut -d'-' -f1)
     new_subconverter_version=$(cat ${AIOCLASH_PATH}/version  | grep subconverter_v | awk '{print $2}'| cut -d'-' -f1)
     new_aioclash_version=$(cat ${AIOCLASH_PATH}/version  | grep version | awk '{print $2}'| cut -d'-' -f1)
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "\033[30;43m欢迎使用更新/卸载功能\033[0m"
-    echo -e "--------------------------------------------------"
-    echo -e "1. ${green}更新 ${end}AIOClash      ${yellow}${sh_ver}${end}     >  ${lightblue}${new_aioclash_version}${end}"
+    echo -----------------------------------------------
+    echo -e "1. ${green}更新 ${end}AIOClash      ${yellow}${sh_ver}${end}      >  ${lightblue}${new_aioclash_version}${end}"
     echo -e "2. ${green}更新 ${end}Clash:        ${yellow}$(clash -v | awk '{print $2}')${end} >  ${lightblue}${new_clash_version}${end}"
     echo -e "3. ${green}更新 ${end}Mosdns:       ${yellow}$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)${end}     >  ${lightblue}${new_mosdns_version}${end}"
     echo -e "4. ${green}更新 ${end}Subconverter  ${yellow}v$(cat ${subconverter_version_file})${end}     >  ${lightblue}${new_subconverter_version}${end}" 
@@ -2281,31 +2307,31 @@ EOF
     echo -e "6. ${green}更新 ${end}Mosdns配置"
     echo -e "7. ${green}更新 ${end}Subconverter配置"
     echo -e "8. ${red}卸载 ${end}AIOClash"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
-    echo -e "--------------------------------------------------"
+    echo -----------------------------------------------
     echo && read -e -p "请输入选择 [1-8]: " num
 
     case "${num}" in
-      1) update_shell_y &&before_show_menu
+      1)  update_shell_y &&before_show_menu
     ;;
-      2) update_clash_y &&before_show_menu
+      2)  update_clash_y &&before_show_menu
     ;;                
-      3) update_mosdns_y &&before_show_menu
+      3)  update_mosdns_y &&before_show_menu
     ;;
-      4) update_subconverter_y &&before_show_menu
+      4)  update_subconverter_y &&before_show_menu
     ;;                   
-      5) update_clash_config
+      5)  update_clash_config
     ;;
-      6) update_mosdns_config
+      6)  update_mosdns_config
     ;;
-      7) update_subconverter_config
+      7)  update_subconverter_config
     ;;
-      8) uninstall
+      8)  uninstall
     ;;
-      0) show_menu
+      0)  show_menu
     ;;             
-      *) echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
+      *)  echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
     ;;
     esac
 }
