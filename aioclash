@@ -864,10 +864,6 @@ script:
 EOF
 }
 
-
-
-
-
 config_base() { 
     echo -e "${green}优化系统,请稍候!${end}" 
     # 优化内核参数
@@ -1419,9 +1415,8 @@ update_subconverter_y() {
     fi
     local_subconverter_version=$(cat "${subconverter_version_file}")
 
-    subconverter_release_download_url="https://api.github.com/repos/tindy2013/subconverter/releases/latest"
     [ -f /tmp/subconverter_release.json ] && rm /tmp/subconverter_release.json
-    webget2 /tmp/subconverter_release.json "${subconverter_release_download_url}"
+    webget2 /tmp/subconverter_release.json https://api.github.com/repos/tindy2013/subconverter/releases/latest echooff
     if [ ! -f /tmp/subconverter_release.json ]; then
       echo -e "${red}Failed to get the release information of Subconverter.${end}"
       exit 1
@@ -1541,10 +1536,65 @@ install_nftables() {
 }
 
 
+install_nftables_cn() {
+    if [ ! -d "/tmp/nftables" ]; then
+      mkdir /tmp/nftables
+    fi
+    mkdir -p /etc/nftables
+# Nftables nftables.conf
+    nftables_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.conf"
+    echo -e "${green}Start download Nftables nftables.conf from ${nftables_download_url}${end}" 
+    webget2  /tmp/nftables/nftables.conf  ${url_cdn}${nftables_download_url}
+    if [ ! -f "/tmp/nftables/nftables.conf" ]; then
+      echo -e "${red}Failed to download Nftables nftables.conf${end}"
+      exit 1
+    fi
+# Nftables private.nft
+    private_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/private.nft"
+    echo -e "${green}Start download Nftables private.nft from ${private_download_url}${end}" 
+    webget2  /tmp/nftables/private.nft  ${url_cdn}${private_download_url}
+    if [ ! -f "/tmp/nftables/private.nft" ]; then
+      echo -e "${red}Failed to download Nftables private.nft${end}"
+      exit 1
+    fi
+# Nftables chnroute.nft
+    # chnroute_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/chnroute.nft"
+    # echo -e "${green}Start download Nftables chnroute.nft from ${chnroute_download_url}${end}" 
+    # webget2  /tmp/nftables/chnroute.nft  ${url_cdn}${chnroute_download_url}
+    # if [ ! -f "/tmp/nftables/chnroute.nft" ]; then
+    #   echo -e "${red}Failed to download Nftables chnroute.nft${end}"
+    #   exit 1
+    # fi
+# Nftables chnroute.nft
+    china_ip_list_download_url="https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt"
+    echo -e "${green}Start download china_ip_list from ${china_ip_list_download_url}${end}" 
+    webget2  /tmp/nftables/china_ip_list.txt  ${url_cdn}${china_ip_list_download_url}
+    if [ ! -f "/tmp/nftables/china_ip_list.txt" ]; then
+      echo -e "${red}Failed to download Nftables china_ip_list.txt${end}"
+      exit 1
+    fi    
+    echo "define chnroute_list = {" > /tmp/nftables/chnroute.nft
+    cat /tmp/nftables/china_ip_list.txt | sed s/$/,/g >> /tmp/nftables/chnroute.nft
+    echo "}" >> /tmp/nftables/chnroute.nft
+
+    mv /tmp/nftables/chnroute.nft /etc/nftables/chnroute.nft
+    mv /tmp/nftables/private.nft /etc/nftables/private.nft
+    mv /tmp/nftables/nftables.conf /etc/nftables.conf
+    ip route replace default dev utun table 114  >> /dev/null 2>&1
+    ip rule del fwmark 114514 lookup 114  >> /dev/null 2>&1
+    ip rule add fwmark 114514 lookup 114 >> /dev/null 2>&1
+    sudo sh -c "nft flush ruleset && nft -f /etc/nftables.conf" >> /dev/null 2>&1
+    systemctl enable nftables.service >> /dev/null 2>&1
+    systemctl start nftables.service >> /dev/null 2>&1
+    rm -rf /tmp/nftables
+    echo -e "${yellow}Nftables successfully installed${end}"
+}
+
+
+
 install_cron() {
     cat << EOF > /var/spool/cron/crontabs/root
-*/5 * * * * aioclash ping >/dev/null 2>&1 #每5分钟检测Clash服务端口
-0 5 * * * aioclash check_ver >/dev/null 2>&1 #每天的5点0分更新AIOClash服务
+0 5 * * * aioclash check_ver >/dev/null 2>&1 #每天的5点0分更新AIOClash服务版本
 EOF
     chmod 777 /var/spool/cron/crontabs/root
     crontab /var/spool/cron/crontabs/root
@@ -1560,21 +1610,21 @@ check_aioclash_ver() {
 }
 
 check_clash_ver() {
-    new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
+    new_clash_ver=$(wget -qO- https://api.github.com/repos/Dreamacro/clash/releases/tags/premium | grep '"name": "Premium' | sed -E 's/.*"Premium ([^"]+)".*/\1/')
     # new_clash_ver=$( wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep clash_v | awk '{print $2}')
     # now_clash_ver=$(clash -v | awk '{print $2}')
     sed -i  's/'clash_v'/'"clash_v ${new_clash_ver}"'/g'  ${AIOCLASH_PATH}/version
 }
 
 check_mosdns_ver() {
-    new_mosdns_ver=$(wget -qO- https://api.github.com/repos/IrineSistiana/mosdns/releases | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+    new_mosdns_ver=$(wget -qO- https://api.github.com/repos/IrineSistiana/mosdns/releases/latest | grep '"tag_name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
     # new_mosdns_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep mosdns_v | awk '{print $2}')
     # now_mosdns_ver=$(mosdns -v | awk '{print $1}'| cut -d'-' -f1)
     sed -i  's/'mosdns_v'/'"mosdns_v ${new_mosdns_ver}"'/g'  ${AIOCLASH_PATH}/version
 }
 
 check_subconverter_ver() {
-    new_subconverter_ver=$(wget -qO- https://api.github.com/repos/tindy2013/subconverter/releases | grep '"name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
+    new_subconverter_ver=$(wget -qO- https://api.github.com/repos/tindy2013/subconverter/releases/latest | grep '"name": ' | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
     # new_subconverter_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep subconverter_v | awk '{print $2}')
     sed -i  's/'subconverter_v'/'"subconverter_v ${new_subconverter_ver}"'/g'  ${AIOCLASH_PATH}/version
 }
@@ -1621,22 +1671,6 @@ ping_service() {
     /etc/init.d/networking restart
     aioclash restart
     fi
-}
-
-dler_config() {
-    read -e -p "是否使用dler订阅? [Y/n] :" yn
-    [[ -z "${yn}" ]] && yn="y"
-    if [[ $yn == [Yy] ]]; then
-      read -e -p "请输入dler订阅TOKEN:" token
-    fi
-    if [ ! "$token" ];then
-      if [ ! -d "/srv/clash" ]; then
-        mkdir /srv/clash
-      fi    
-        mv /root/config.yaml /srv/clash/config.yaml     
-      else
-        dler_clash_config
-    fi    
 }
 
 update_config () {
@@ -1686,7 +1720,21 @@ update_subconverter_config () {
     aioclash restart_subconverter
 }
 
-
+dler_config() {
+    read -e -p "是否使用dler订阅? [Y/n] :" yn
+    [[ -z "${yn}" ]] && yn="y"
+    if [[ $yn == [Yy] ]]; then
+      read -e -p "请输入dler订阅TOKEN:" token
+    fi
+    if [ ! "$token" ];then
+      if [ ! -d "/srv/clash" ]; then
+        mkdir /srv/clash
+      fi    
+        mv /root/config.yaml /srv/clash/config.yaml     
+      else
+        dler_clash_config
+    fi    
+}
 
 install() {
     getcpucore
@@ -1704,17 +1752,17 @@ install() {
       # echo -e "${green}请将config.yaml配置文件上传到/root"  
       check_disk_status
       echo -----------------------------------------------
-      update_shell
       # dler_config
       config_ip_dns
       config_base
+      update_shell
       install_debian
       install_clash
       install_mosdns
       install_subconverter
       supervisor_config    
-      install_nftables
-      # install_cron
+      install_nftables_cn
+      install_cron
       echo -----------------------------------------------
       echo -e "${green}AIOClash 安装成功${end}"
       echo -e "${green}Clash配置文件:${yaml_path}${end}"
@@ -2023,7 +2071,7 @@ getyaml(){
     mkyamlbak  
     echo -e "\033[32m正在创建配置文件\033[0m"
     echo -----------------------------------------------
-    wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path >> /dev/null 2>&1
+    wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path
     keepyaml
 }
 
@@ -2109,7 +2157,7 @@ clashcron(){
     echo -e " 3 设置\033[32m定时开启\033[0mClash服务"
     echo -e " 4 设置\033[33m定时更新\033[0m订阅并重启服务"
     echo -e " 5 设置\033[34m定时检测\033[0mClash服务端口并重启服务"
-    echo -e " 6 设置\033[36m定时更新\033[0mAIOClash服务"
+    echo -e " 6 设置\033[36m定时更新\033[0mAIOClash服务版本"
     echo -----------------------------------------------
     echo -e " 0 返回上级菜单" 
     echo -----------------------------------------------
@@ -2161,7 +2209,7 @@ clashcron(){
       fi
       clashcron
     elif [ "$num" = 6 ]; then 
-      cronname=更新AIOClash服务
+      cronname=更新AIOClash服务版本
       cronset="aioclash check_ver"
       setcron 
       clashcron
@@ -2194,16 +2242,22 @@ show_usage() {
 }
 
 clash_getconfig(){
-  PID=$(pidof clash)
-  if [ -n "$PID" ];then
-    run="\033[32m已运行\033[0m"
-    VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
-    time=$(supervisorctl status clash | awk '{print $6,$7,$8}')
-    echo -e "Clash"$run":\033[0;34m"$time"\033[0m,内存占用:\033[0;34m"$VmRSS"\033[0m"
-  else
-    run="\033[31m没有运行\033[0m"
-    echo -e "Clash"$run""
-  fi
+    PID=$(pidof clash)
+    if [ -n "$PID" ];then
+      check_clash_status2
+      if [ $? -eq 0 ];then
+      run="\033[32m已运行\033[0m"
+      VmRSS=$(cat /proc/$PID/status|grep -w VmRSS|awk '{print $2,$3}')
+      time=$(supervisorctl status clash | awk '{print $6,$7,$8}')
+      echo -e "Clash"$run":\033[0;34m"$time"\033[0m,内存占用:\033[0;34m"$VmRSS"\033[0m"
+      else
+      run=":\033[31m请检查或导入配置文件\033[0m"
+      echo -e "Clash"$run""
+      fi
+    else
+      run="\033[31m没有运行\033[0m"
+      echo -e "Clash"$run""
+    fi
 }
 
 mosdns_getconfig(){
@@ -2236,7 +2290,7 @@ subconverter_getconfig(){
 getconfig(){
     getcpucore
     echo -----------------------------------------------
-    echo -e "\033[30;46m欢迎使用All In One Clash!\033[0m      版本：${sh_ver}"
+    echo -e "\033[30;46m欢迎使用All In One Clash!\033[0m      版本:${sh_ver}"
     check_disk_status
     clash_getconfig
     mosdns_getconfig
@@ -2251,7 +2305,7 @@ show_menu() {
     echo -e "2. ${green}重启 ${end}Mosdns"
     echo -e "3. ${green}重启 ${end}Subconverter"
     echo -----------------------------------------------
-    echo -e "4. ${green}导入 ${end}订阅"
+    echo -e "4. ${green}导入 ${end}配置文件"
     echo -e "5. ${green}设置 ${end}定时"
     echo -----------------------------------------------
     echo -e "6. ${green}重启 ${end}AIOClash"
@@ -2281,7 +2335,7 @@ show_menu() {
     ;; 
       q)  exit 1
     ;;     
-      *)  echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
+      *)  errornum &&before_show_menu
     ;;
     esac
 }
@@ -2315,7 +2369,8 @@ setup_menu() {
     ;;
       0)  show_menu
     ;;
-      *)  echo -e "${red}请输入正确的数字 [1-2]${end}" &&before_show_menu
+      *)  errornum
+          setup_menu
     ;;
     esac
 
@@ -2374,14 +2429,15 @@ EOF
     ;;
       0)  show_menu
     ;;             
-      *)  echo -e "${red}请输入正确的数字 [1-8]${end}" &&before_show_menu
+      *)  errornum
+          update_menu
     ;;
     esac
 }
 
 uninstall() {
     echo -----------------------------------------------
-      read -e -p "确认卸载AIOClash？（警告：该操作不可逆！）[1/0] > " res
+      read -e -p "确认卸载AIOClash？（警告:该操作不可逆!）[1/0] > " res
     if [ "$res" = '1' ]; then
     supervisorctl stop clash >> /dev/null 2>&1
     rm -rf /etc/supervisor/conf.d/clash.conf
