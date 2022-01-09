@@ -23,7 +23,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="1.2.2"
+sh_ver="1.2.0"
 
 url_cdn="https://git.o8.cx/"
 
@@ -2024,15 +2024,14 @@ getlink(){
 }
 
 mkyamlbak(){
-    mkdir -p $CLASH_PATH
-    if [ ! -e "$yaml_path" ];then
+    if [ ! -f "$yaml_path" ];then
     cat << EOF > /tmp/config.yaml
 mixed-port: 7890
 EOF
     mv /tmp/config.yaml $yaml_path 
+    fi
     cp -r $yaml_path $bak_yaml_path
     cp -r $formyairport_path $bak_formyairport_path
-    fi
 }
 
 keepyaml2(){
@@ -2071,7 +2070,8 @@ getyaml(){
     mkyamlbak  
     echo -e "\033[32m正在创建配置文件\033[0m"
     echo -----------------------------------------------
-    wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path
+    # wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path
+    webget2 $new_yaml_path "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password"
     keepyaml
 }
 
@@ -2389,7 +2389,6 @@ EOF
     else
       check_aioclash_ver
     fi
-    
     new_clash_version=$(cat ${AIOCLASH_PATH}/version  | grep clash_v | awk '{print $2}'| cut -d'-' -f1)
     new_mosdns_version=$(cat ${AIOCLASH_PATH}/version  | grep mosdns_v | awk '{print $2}'| cut -d'-' -f1)
     new_subconverter_version=$(cat ${AIOCLASH_PATH}/version  | grep subconverter_v | awk '{print $2}'| cut -d'-' -f1)
