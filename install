@@ -34,13 +34,8 @@ webget(){
 	fi
 }
 
-webget /srv/version $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version >> /dev/null 2>&1
+echo -----------------------------------------------
+echo -e "${green}开始从服务器获取安装文件！${plain}"
 webget /usr/bin/aioclash $url_cdn/https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash
-#wget -O /usr/bin/aioclash https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/aioclash >> /dev/null 2>&1
 chmod +x /usr/bin/aioclash >> /dev/null 2>&1
-echo "---------------------------------------"
-echo -e "${green}AIOClash 安装成功${plain}"
-echo -e "${green}AIOClash使用方法 aioclash${plain}"
-echo -e "${green}第一次请用命令安装 aioclash install${plain}"
-echo "---------------------------------------"
 aioclash install
