@@ -23,7 +23,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="1.2.2"
+sh_ver="1.3.0"
 
 url_cdn="https://git.o8.cx/"
 
@@ -221,7 +221,7 @@ startretries=3                                              ;启动失败自动�
 redirect_stderr=true                                        ;把stderr重定向到stdout，默认false
 stdout_logfile_maxbytes=20MB                                ;stdout 日志文件大小，默认50MB
 stdout_logfile_backups = 5                                  ;stdout 日志文件备份数，默认是10
-#stdout_logfile=/tmp/mosdns.log                             ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
+stdout_logfile=/tmp/mosdns.log                             ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
 EOF
 }
 
@@ -237,7 +237,7 @@ startretries=3                                              ;启动失败自动�
 redirect_stderr=true                                        ;把stderr重定向到stdout，默认false
 stdout_logfile_maxbytes=20MB                                ;stdout 日志文件大小，默认50MB
 stdout_logfile_backups = 5                                  ;stdout 日志文件备份数，默认是10
-#stdout_logfile=/tmp/subconverter.log                       ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
+stdout_logfile=/tmp/subconverter.log                       ;stdout 日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord 会自动创建日志文件）
 EOF
 }
 
@@ -955,6 +955,7 @@ config_ip_dns(){
     rm -rf /etc/resolv.conf
     cat << EOF > /etc/resolv.conf
 nameserver $ip_dns
+nameserver 202.96.128.86
 EOF
 
     cat << EOF > /etc/network/interfaces
@@ -1009,7 +1010,7 @@ EOF
     echo -e "${green}系统升级完成!${end}"
 
     echo -e "${green}安装软件,请稍候! 大概5-10分钟!${end}"     
-    apt -y install htop sudo strace supervisor curl wget unzip nftables ntpdate net-tools gawk >> /dev/null 2>&1
+    apt -y install htop sudo strace supervisor curl wget unzip nftables ntpdate net-tools gawk jq >> /dev/null 2>&1
     rm /etc/localtime
     ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
     ntpdate cn.pool.ntp.org >> /dev/null 2>&1
@@ -1018,7 +1019,6 @@ EOF
 }
 
 install_clash() {
-
 # Clash Premium core
     clash_premium_url="https://api.github.com/repos/Dreamacro/clash/releases/tags/premium"
 
@@ -1050,38 +1050,52 @@ install_clash() {
         exit 1
     fi
 
+    remote_clash_version=$(jq '.name' /tmp/clash/clash_premium_release.json | tr -d '"' | awk '{print $2}')
+    echo "clash_v ${remote_clash_version}" >> ${AIOCLASH_PATH}/version
+
     rm -rf ${clash_bin}
     gunzip /tmp/clash/clash.gz
     mv /tmp/clash/clash ${clash_bin}
     chmod +x ${clash_bin}
     setcap cap_net_bind_service=+ep ${clash_bin}
 
-# Clash dashboard
-    clash_dashboard_download_url="https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip"
-    echo -e "${green}Start download Clash Dashboard from ${clash_dashboard_download_url}${end}" 
-    webget2  /tmp/clash/dashboard.zip  ${url_cdn}${clash_dashboard_download_url}
-    if [ ! -f "/tmp/clash/dashboard.zip" ]; then
-      echo -e "${red}Failed to download Clash Dashboard.${end}"
-      exit 1
-    fi
-    cd /tmp/clash
-    unzip dashboard.zip >> /dev/null 2>&1
-    mv -f -T /tmp/clash/clash-dashboard-gh-pages ${CLASH_PATH}/dashboard
-
-# Clash Country.mmdb
-    clash_dashboard_download_url="https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb"
-    echo -e "${green}Start download Clash Country.mmdb from ${clash_dashboard_download_url}${end}" 
-    webget2 ${CLASH_PATH}/Country.mmdb ${url_cdn}${clash_dashboard_download_url}
-    if [ ! -f "${CLASH_PATH}/Country.mmdb" ]; then
-      echo -e "${red}Failed to download Country.mmdb.${end}"
-      exit 1
-    fi
-
+    download_clash_dashboard
+    download_clash_Country
+    
     rm -rf /tmp/clash
     supervisor_clash_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart clash >> /dev/null 2>&1
     echo -e "${yellow}Clash successfully installed${end}"
+}
+
+download_clash_dashboard () {
+    clash_dashboard_download_url="https://github.com/Dreamacro/clash-dashboard/archive/gh-pages.zip"
+    echo -e "${green}Start download Clash Dashboard from ${clash_dashboard_download_url}${end}" 
+    webget2  /tmp/dashboard.zip  ${url_cdn}${clash_dashboard_download_url}
+    if [ -f "/tmp/dashboard.zip" ]; then
+      cd /tmp
+      unzip dashboard.zip >> /dev/null 2>&1
+      [ -d "${CLASH_PATH}/dashboard" ] && rm -rf "${CLASH_PATH}/dashboard"
+      mv -f -T /tmp/clash-dashboard-gh-pages ${CLASH_PATH}/dashboard
+      rm -rf /tmp/dashboard.zip
+    else
+      echo -e "${red}Failed to download Clash Dashboard.${end}"
+      exit 1
+    fi
+}
+
+download_clash_Country () {
+    clash_Country_download_url="https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb"
+    echo -e "${green}Start download Clash Country.mmdb from ${clash_Country_download_url}${end}" 
+    webget2 /tmp/Country.mmdb ${url_cdn}${clash_Country_download_url}
+    if [ -f "/tmp/Country.mmdb" ]; then
+      [ -f "${CLASH_PATH}/Country.mmdb" ] && rm -rf "${CLASH_PATH}/Country.mmdb"
+      mv /tmp/Country.mmdb ${CLASH_PATH}/Country.mmdb
+    else
+      echo -e "${red}Failed to download Country.mmdb.${end}"
+      exit 1
+    fi
 }
 
 update_clash_y() {
@@ -1162,7 +1176,6 @@ update_clash_y() {
 }
 
 install_mosdns() {
-
 # Mosdns core
     mosdns_url="https://api.github.com/repos/IrineSistiana/mosdns/releases/latest"
 
@@ -1194,44 +1207,63 @@ install_mosdns() {
         exit 1
     fi
 
+    remote_mosdns_version=$(jq '.name' /tmp/mosdns/mosdns_release.json | tr -d '"' | awk '{print $1}'| cut -d'-' -f1)
+    echo "mosdns_v ${remote_mosdns_version}" >> ${AIOCLASH_PATH}/version
+
     cd /tmp/mosdns
     rm -rf ${mosdns_bin}
     unzip /tmp/mosdns/mosdns.zip  >> /dev/null 2>&1
     mv mosdns ${mosdns_bin}
     chmod 777 ${mosdns_bin}
 
-# Mosdns Config.yaml
-    config_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"
-    echo -e "${green}Start download Mosdns Config.yaml from ${config_download_url}${end}" 
-    webget2  ${MOSDNS_PATH}/config.yaml  ${url_cdn}${config_download_url}
-    if [ ! -f "${MOSDNS_PATH}/config.yaml" ]; then
-      echo -e "${red}Failed to download Mosdns Config.yaml.${end}"
-      exit 1
-    fi
-
-# Mosdns geoip.dat
-    geoip_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
-    echo -e "${green}Start download Mosdns Geoip.dat from ${geoip_download_url}${end}" 
-    webget2  ${MOSDNS_PATH}/geoip.dat  ${url_cdn}${geoip_download_url}
-    if [ ! -f "${MOSDNS_PATH}/geoip.dat" ]; then
-      echo -e "${red}Failed to download Mosdns Geoip.dat.${end}"
-      exit 1
-    fi
-
-# Mosdns geosite.dat
-    geosite_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    echo -e "${green}Start download Mosdns Geosite.dat from ${geosite_download_url}${end}" 
-    webget2  ${MOSDNS_PATH}/geosite.dat  ${url_cdn}${geosite_download_url}
-    if [ ! -f "${MOSDNS_PATH}/geosite.dat" ]; then
-      echo -e "${red}Failed to download Mosdns Geosite.dat.${end}"
-      exit 1
-    fi
+    download_mosdns_config
+    download_mosdns_geoip
+    download_geosite_geoip    
 
     rm -rf /tmp/mosdns
     supervisor_mosdns_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart mosdns >> /dev/null 2>&1
     echo -e "${yellow}Mosdns successfully installed${end}"
+}
+
+download_mosdns_config () {
+    config_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"
+    echo -e "${green}Start download Mosdns Config.yaml from ${config_download_url}${end}" 
+    webget2  /tmp/config.yaml  ${url_cdn}${config_download_url}
+    if [ -f "/tmp/config.yaml" ]; then
+      [ -f "${MOSDNS_PATH}/config.yaml" ] && rm -rf "${MOSDNS_PATH}/config.yaml"
+      mv /tmp/config.yaml ${MOSDNS_PATH}/config.yaml
+    else
+      echo -e "${red}Failed to download Mosdns Config.yaml${end}"
+      exit 1
+    fi
+}
+
+download_mosdns_geoip () {
+    geoip_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
+    echo -e "${green}Start download Mosdns Geoip.dat from ${geoip_download_url}${end}" 
+    webget2  /tmp/geoip.dat  ${url_cdn}${geoip_download_url}
+    if [ -f "/tmp/geoip.dat" ]; then
+     [ -f "${MOSDNS_PATH}/geoip.dat" ] && rm -rf "${MOSDNS_PATH}/geoip.dat"
+      mv /tmp/geoip.dat ${MOSDNS_PATH}/geoip.dat
+    else   
+      echo -e "${red}Failed to download Mosdns Geoip.dat${end}"
+      exit 1
+    fi
+}
+
+download_geosite_geoip () {
+    geosite_download_url="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
+    echo -e "${green}Start download Mosdns Geosite.dat from ${geosite_download_url}${end}" 
+    webget2  /tmp/geosite.dat  ${url_cdn}${geosite_download_url}
+    if [ -f "/tmp/geosite.dat" ]; then
+      [ -f "${MOSDNS_PATH}/geosite.dat" ] && rm -rf "${MOSDNS_PATH}/geosite.dat"
+      mv /tmp/geosite.dat ${MOSDNS_PATH}/geosite.dat
+    else
+      echo -e "${red}Failed to download Mosdns Geosite.dat${end}"
+      exit 1
+    fi
 }
 
 update_mosdns_y() {
@@ -1312,7 +1344,6 @@ update_mosdns_y() {
 }
 
 install_subconverter() {
-
 # Subconverter core
     subconverter_url="https://api.github.com/repos/tindy2013/subconverter/releases/latest"
 
@@ -1355,57 +1386,84 @@ install_subconverter() {
     fi
     remote_subconverter_version=$(jq '.name' /tmp/subconverter/subconverter_release.json | tr -d '"' | tr -d 'v')
     echo "${remote_subconverter_version}" > "${subconverter_version_file}"
+    echo "subconverter_v ${remote_subconverter_version}" >> ${AIOCLASH_PATH}/version
 
-# Subconverter all_base.tpl
-    all_base_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"
-    echo -e "${green}Start download Subconverter All_base.tpl from ${all_base_download_url}${end}" 
-    webget2  ${SUBCONVERTER_PATH}/base/all_base.tpl  ${url_cdn}${all_base_download_url}
-    if [ ! -f "${SUBCONVERTER_PATH}/base/all_base.tpl" ]; then
-      echo -e "${red}Failed to download Subconverter All_base.tpl.${end}"
-      exit 1
-    fi
-
-# Subconverter Loyalsoldier.ini
-    Loyalsoldier_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"
-    echo -e "${green}Start download Subconverter Loyalsoldier.ini from ${Loyalsoldier_download_url}${end}" 
-    webget2  ${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini  ${url_cdn}${Loyalsoldier_download_url}
-    if [ ! -f "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini" ]; then
-      echo -e "${red}Failed to download Subconverter Loyalsoldier.ini.${end}"
-      exit 1
-    fi
-
-# Subconverter yuanlam.ini
-    yuanlam_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"
-    echo -e "${green}Start download Subconverter yuanlam.ini from ${yuanlam_download_url}${end}" 
-    webget2  ${SUBCONVERTER_PATH}/profiles/yuanlam.ini  ${url_cdn}${yuanlam_download_url}
-    if [ ! -f "${SUBCONVERTER_PATH}/profiles/yuanlam.ini" ]; then
-      echo -e "${red}Failed to download Subconverter yuanlam.ini.${end}"
-      exit 1
-    fi
-
-# Subconverter formyairport.ini
-    formyairport_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"
-    echo -e "${green}Start download Subconverter formyairport.ini from ${formyairport_download_url}${end}" 
-    webget2  ${SUBCONVERTER_PATH}/profiles/formyairport.ini  ${url_cdn}${formyairport_download_url}
-    if [ ! -f "${SUBCONVERTER_PATH}/profiles/formyairport.ini" ]; then
-      echo -e "${red}Failed to download Subconverter formyairport.ini.${end}"
-      exit 1
-    fi
-
-# Subconverter ShellClash_Full.ini
-    formyairport_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini"
-    echo -e "${green}Start download Subconverter ShellClash_Full.ini from ${formyairport_download_url}${end}" 
-    webget2  ${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini  ${url_cdn}${formyairport_download_url}
-    if [ ! -f "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini" ]; then
-      echo -e "${red}Failed to download Subconverter ShellClash_Full.ini.${end}"
-      exit 1
-    fi
+    download_subconverter_formyairport
+    download_subconverter_all_base
+    download_subconverter_Loyalsoldier
+    download_subconverter_yuanlam
+    download_subconverter_ShellClash_Full
 
     rm -rf /tmp/subconverter
     supervisor_subconverter_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart subconverter >> /dev/null 2>&1
     echo -e "${yellow}Subconverter successfully installed${end}"
+}
+
+download_subconverter_formyairport () {
+    formyairport_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"
+    echo -e "${green}Start download Subconverter formyairport from ${formyairport_download_url}${end}" 
+    webget2  /tmp/formyairport.ini  ${url_cdn}${formyairport_download_url}
+    if [ -f "/tmp/formyairport.ini" ]; then
+      [ -f "${SUBCONVERTER_PATH}/profiles/formyairport.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/formyairport.ini"
+      mv /tmp/formyairport.ini ${SUBCONVERTER_PATH}/profiles/formyairport.ini
+    else
+      echo -e "${red}Failed to download Subconverter formyairport.ini${end}"
+      exit 1
+    fi
+}
+
+download_subconverter_all_base () {
+    all_base_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"
+    echo -e "${green}Start download Subconverter All_base.tpl from ${all_base_download_url}${end}" 
+    webget2  /tmp/all_base.tpl  ${url_cdn}${all_base_download_url}
+    if [ -f "/tmp/all_base.tpl" ]; then
+      [ -f "${SUBCONVERTER_PATH}/base/all_base.tpl" ] && rm -rf "${SUBCONVERTER_PATH}/base/all_base.tpl"
+      mv /tmp/all_base.tpl ${SUBCONVERTER_PATH}/base/all_base.tpl
+    else
+      echo -e "${red}Failed to download Subconverter All_base.tpl${end}"
+      exit 1
+    fi
+}
+
+download_subconverter_Loyalsoldier () {
+    Loyalsoldier_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"
+    echo -e "${green}Start download Subconverter Loyalsoldier.ini from ${Loyalsoldier_download_url}${end}" 
+    webget2  /tmp/Loyalsoldier.ini  ${url_cdn}${Loyalsoldier_download_url}
+    if [ -f "/tmp/Loyalsoldier.ini" ]; then
+      [ -f "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini"
+      mv /tmp/Loyalsoldier.ini ${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini
+    else
+      echo -e "${red}Failed to download Subconverter Loyalsoldier.ini${end}"
+      exit 1
+    fi
+}
+
+download_subconverter_yuanlam () {
+    yuanlam_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"
+    echo -e "${green}Start download Subconverter yuanlam.ini from ${yuanlam_download_url}${end}" 
+    webget2  /tmp/yuanlam.ini  ${url_cdn}${yuanlam_download_url}
+    if [ -f "/tmp/yuanlam.ini" ]; then
+      [ -f "${SUBCONVERTER_PATH}/profiles/yuanlam.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/yuanlam.ini"
+      mv /tmp/yuanlam.ini ${SUBCONVERTER_PATH}/profiles/yuanlam.ini
+    else
+      echo -e "${red}Failed to download Subconverter yuanlam.ini${end}"
+      exit 1
+    fi
+}
+
+download_subconverter_ShellClash_Full () {
+    ShellClash_Full_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini"
+    echo -e "${green}Start download Subconverter ShellClash_Full.ini from ${ShellClash_Full_download_url}${end}" 
+    webget2  /tmp/ShellClash_Full.ini  ${url_cdn}${ShellClash_Full_download_url}
+    if [ -f "/tmp/ShellClash_Full.ini" ]; then
+      [ -f "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini"
+      mv /tmp/ShellClash_Full.ini ${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini
+    else
+      echo -e "${red}Failed to download Subconverter ShellClash_Full.ini${end}"
+      exit 1
+    fi
 }
 
 update_subconverter_y() {
@@ -1418,22 +1476,22 @@ update_subconverter_y() {
     [ -f /tmp/subconverter_release.json ] && rm /tmp/subconverter_release.json
     webget2 /tmp/subconverter_release.json https://api.github.com/repos/tindy2013/subconverter/releases/latest echooff
     if [ ! -f /tmp/subconverter_release.json ]; then
-      echo -e "${red}Failed to get the release information of Subconverter.${end}"
+      echo -e "${red}Failed to get the release information of Subconverter${end}"
       exit 1
     fi
 
     remote_subconverter_version=$(jq '.name' /tmp/subconverter_release.json | tr -d '"' | tr -d 'v')
     if (verlt "${local_subconverter_version}" "${remote_subconverter_version}") then
-      echo -e "${green}Found a new version of Subconverter.${end}"
+      echo -e "${green}Found a new version of Subconverter${end}"
     else
-      echo -e "${green}Subconverter is up to date.${end}"
+      echo -e "${green}Subconverter is up to date${end}"
       exit 2
     fi
 
     [ -f /tmp/subconverter_release_assets ] && rm /tmp/subconverter_release_assets
     jq '.assets[].name' /tmp/subconverter_release.json > /tmp/subconverter_release_assets
     if [ ! -f /tmp/subconverter_release_assets ]; then
-      echo -e "${red}Failed to get the release information of Subconverter.${end}"
+      echo -e "${red}Failed to get the release information of Subconverter${end}"
       rm /tmp/subconverter_release.json
       exit 1
     fi
@@ -1454,7 +1512,7 @@ update_subconverter_y() {
     [ -f "/tmp/subconverter.tar.gz" ] && rm "/tmp/subconverter.tar.gz"
     webget2 /tmp/subconverter.tar.gz "${url_cdn}${remote_subconverter_download_url}"
     if [ ! -f "/tmp/subconverter.tar.gz" ]; then
-      echo -e "${red}Failed to download subconverter.${end}"
+      echo -e "${red}Failed to download subconverter${end}"
       exit 1
     fi
 
@@ -1463,7 +1521,7 @@ update_subconverter_y() {
     cd /tmp
     tar -zxvf /tmp/subconverter.tar.gz >> /dev/null 2>&1
     if [ $? -ne 0 ]; then
-      echo -e "${red}Failed to download subconverter.${end}"
+      echo -e "${red}Failed to tar subconverter.tar.gz${end}"
       rm /tmp/subconverter.tar.gz
       rm -rf /tmp/subconverter
       exit 1
@@ -1475,8 +1533,10 @@ update_subconverter_y() {
     rm -rf /tmp/subconverter
 
     echo "${remote_subconverter_version}" > "${subconverter_version_file}"
-    echo -e "${green}Subconverter has been updated.${end}"
+    echo -e "${green}Subconverter has been updated${end}"
 }
+
+
 
 update_shell_y() {
     new_shell_ver=$(wget -qO- ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/version | grep version | awk '{print $2}')
@@ -1509,33 +1569,6 @@ update_shell() {
     fi
 }
 
-install_nftables() {
-    if [ ! -d "/tmp/nftables" ]; then
-      mkdir /tmp/nftables
-    fi
-    mkdir -p /etc/nftables
-    echo -e "${green}Start download nftables file...${end}" 
-    webget2 /tmp/nftables/nftables.zip  ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.zip >> /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-      echo -e "${red}Failed to download nftables.${end}"
-      exit 1
-    fi
-    cd /tmp/nftables
-    unzip nftables.zip >> /dev/null 2>&1
-    mv /tmp/nftables/nftables/chnroute.nft /etc/nftables/chnroute.nft
-    mv /tmp/nftables/nftables/private.nft /etc/nftables/private.nft
-    mv /tmp/nftables/nftables/nftables.conf /etc/nftables.conf
-    ip route replace default dev utun table 114  >> /dev/null 2>&1
-    ip rule del fwmark 114514 lookup 114  >> /dev/null 2>&1
-    ip rule add fwmark 114514 lookup 114 >> /dev/null 2>&1
-    sudo sh -c "nft flush ruleset && nft -f /etc/nftables.conf" >> /dev/null 2>&1
-    systemctl enable nftables.service >> /dev/null 2>&1
-    systemctl start nftables.service >> /dev/null 2>&1
-    rm -rf /tmp/nftables
-    echo -e "${yellow}Nftables successfully installed${end}"
-}
-
-
 install_nftables_cn() {
     if [ ! -d "/tmp/nftables" ]; then
       mkdir /tmp/nftables
@@ -1557,14 +1590,6 @@ install_nftables_cn() {
       echo -e "${red}Failed to download Nftables private.nft${end}"
       exit 1
     fi
-# Nftables chnroute.nft
-    # chnroute_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/chnroute.nft"
-    # echo -e "${green}Start download Nftables chnroute.nft from ${chnroute_download_url}${end}" 
-    # webget2  /tmp/nftables/chnroute.nft  ${url_cdn}${chnroute_download_url}
-    # if [ ! -f "/tmp/nftables/chnroute.nft" ]; then
-    #   echo -e "${red}Failed to download Nftables chnroute.nft${end}"
-    #   exit 1
-    # fi
 # Nftables chnroute.nft
     china_ip_list_download_url="https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt"
     echo -e "${green}Start download china_ip_list from ${china_ip_list_download_url}${end}" 
@@ -1680,44 +1705,23 @@ update_config () {
 }
 
 update_clash_config () {
-    update_shell
-    echo -e "${green}更新clash配置!${end}"   
-    mv /srv/clash/config.yaml /tmp/clash_config.yaml.`date "+%Y.%m.%d.%H:%M"`
-    rm -rf /srv/clash/*.yaml
-    webget2 /srv/clash/Country.mmdb ${url_cdn}https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb
-    dler_clash_config
-    aioclash restart_clash
+    download_clash_Country
+    restart_clash
 }
 
 update_mosdns_config () {
-    update_shell
-    echo -e "${green}更新mosdns配置!${end}" 
-    mv /srv/mosdns/config.yaml /tmp/mosdns_config.yaml.`date "+%Y.%m.%d.%H:%M"`
-    webget2 /srv/mosdns/config.yaml "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/mosdns/config.yaml"  
-    echo -e "${green}config.yaml下载成功${end}"      
-    webget2 /srv/mosdns/geoip.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"  
-    echo -e "${green}geoip.dat下载成功${end}" 
-    webget2 /srv/mosdns/geosite.dat "${url_cdn}https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-    echo -e "${green}geosite.dat下载成功${end}"
-    aioclash restart_mosdns
+    download_mosdns_config
+    download_mosdns_geoip
+    download_geosite_geoip
+    restart_mosdns
 }
 
 update_subconverter_config () {
-    update_shell
-    echo -e "${green}更新Subconverter配置!${end}" 
-    mv /srv/subconverter/base/all_base.tpl /tmp/subconverter_all_base.tpl.`date "+%Y.%m.%d.%H:%M"`
-    mv /srv/subconverter/profiles/Loyalsoldier.ini /tmp/subconverter_Loyalsoldier.ini.`date "+%Y.%m.%d.%H:%M"`
-    mv /srv/subconverter/profiles/yuanlam.ini /tmp/subconverter_yuanlam.ini.`date "+%Y.%m.%d.%H:%M"`
-    mv /srv/subconverter/profiles/yuanlam.ini /tmp/ShellClash_Full.ini.`date "+%Y.%m.%d.%H:%M"`
-    webget2 /srv/subconverter/base/all_base.tpl "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"  
-    echo -e "${green}all_base.tpl下载成功${end}"
-    webget2 /srv/subconverter/profiles/Loyalsoldier.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"  
-    echo -e "${green}Loyalsoldier.ini下载成功${end}"  
-    webget2 /srv/subconverter/profiles/yuanlam.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"  
-    echo -e "${green}yuanlam.ini下载成功${end}"
-    webget2 /srv/subconverter/profiles/ShellClash_Full.ini "${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini"  
-    echo -e "${green}ShellClash_Full.ini下载成功${end}"
-    aioclash restart_subconverter
+    download_subconverter_all_base
+    download_subconverter_Loyalsoldier
+    download_subconverter_yuanlam
+    download_subconverter_ShellClash_Full
+    restart_subconverter
 }
 
 dler_config() {
@@ -1755,7 +1759,7 @@ install() {
       # dler_config
       config_ip_dns
       config_base
-      update_shell
+      # update_shell
       install_debian
       install_clash
       install_mosdns
@@ -1763,6 +1767,7 @@ install() {
       supervisor_config    
       install_nftables_cn
       install_cron
+      echo "version ${sh_ver}" >> ${AIOCLASH_PATH}/version
       echo -----------------------------------------------
       echo -e "${green}AIOClash 安装成功${end}"
       echo -e "${green}Clash配置文件:${yaml_path}${end}"
@@ -2070,7 +2075,7 @@ getyaml(){
     mkyamlbak  
     echo -e "\033[32m正在创建配置文件\033[0m"
     echo -----------------------------------------------
-    # wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path
+#    wget "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password" -O $new_yaml_path
     webget2 $new_yaml_path "http://127.0.0.1:25500/getprofile?name=profiles/formyairport.ini&token=password"
     keepyaml
 }
