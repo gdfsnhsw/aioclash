@@ -18,7 +18,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="1.3.1"
+sh_ver="1.3.2"
 
 url_cdn="https://git.o8.cx/"
 
@@ -932,11 +932,6 @@ root  soft     nofile     524288
 root  hard     nofile     524288
 EOF
 
-#echo 'ListenAddress 0.0.0.0'>>/etc/ssh/sshd_config
-#echo 'AddressFamily inet'>>/etc/ssh/sshd_config
-
-#service sshd restart
-
 echo 'DNSStubListener=no'>>/etc/systemd/resolved.conf
 
 }
@@ -1055,7 +1050,7 @@ install_clash() {
     setcap cap_net_bind_service=+ep ${clash_bin}
 
     download_clash_dashboard
-    download_clash_Country
+    # download_clash_Country
     
     rm -rf /tmp/clash
     supervisor_clash_config
@@ -1383,97 +1378,119 @@ install_subconverter() {
     echo "${remote_subconverter_version}" > "${subconverter_version_file}"
     echo "subconverter_v ${remote_subconverter_version}" >> ${AIOCLASH_PATH}/version
 
-    download_subconverter_formyairport
-    download_subconverter_all_base
-    download_subconverter_Loyalsoldier
-    download_subconverter_yuanlam
-    download_subconverter_ShellClash_Full
-    download_subconverter_LM-Firefly
+    # download_subconverter_formyairport
+    # download_subconverter_all_base
+    # download_subconverter_Loyalsoldier
+    # download_subconverter_yuanlam
+    # download_subconverter_ShellClash_Full
+    # download_subconverter_LM-Firefly
 
     rm -rf /tmp/subconverter
     supervisor_subconverter_config
     supervisorctl update >> /dev/null 2>&1
     supervisorctl restart subconverter >> /dev/null 2>&1
     echo -e "${yellow}Subconverter successfully installed${end}"
+
+    cat << EOF > ${SUBCONVERTER_PATH}/profiles/formyairport.ini
+[Profile]
+#调用说明:https://github.com/tindy2013/subconverter/blob/master/README-cn.md
+target=clash
+scv=false
+tfo=false
+fdn=true
+emoji=true
+append_info=false
+list=false
+exclude=(流量|本站|官网|过期|群|IPV6)
+rename=云\s-\s@
+config=${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/AIO.ini
+expand=false
+classic=true
+script=true
+url=trojan://密码@域名:443#名称
+udp=false
+EOF
 }
 
-download_subconverter_formyairport () {
-    formyairport_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"
-    echo -e "${green}Start download Subconverter formyairport from ${formyairport_download_url}${end}" 
-    webget2  /tmp/formyairport.ini  ${url_cdn}${formyairport_download_url}
-    if [ -f "/tmp/formyairport.ini" ]; then
-      [ -f "${SUBCONVERTER_PATH}/profiles/formyairport.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/formyairport.ini"
-      mv /tmp/formyairport.ini ${SUBCONVERTER_PATH}/profiles/formyairport.ini
-    else
-      echo -e "${red}Failed to download Subconverter formyairport.ini${end}"
-      exit 1
-    fi
-}
 
-download_subconverter_all_base () {
-    all_base_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"
-    echo -e "${green}Start download Subconverter All_base.tpl from ${all_base_download_url}${end}" 
-    webget2  /tmp/all_base.tpl  ${url_cdn}${all_base_download_url}
-    if [ -f "/tmp/all_base.tpl" ]; then
-      [ -f "${SUBCONVERTER_PATH}/base/all_base.tpl" ] && rm -rf "${SUBCONVERTER_PATH}/base/all_base.tpl"
-      mv /tmp/all_base.tpl ${SUBCONVERTER_PATH}/base/all_base.tpl
-    else
-      echo -e "${red}Failed to download Subconverter All_base.tpl${end}"
-      exit 1
-    fi
-}
 
-download_subconverter_Loyalsoldier () {
-    Loyalsoldier_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"
-    echo -e "${green}Start download Subconverter Loyalsoldier.ini from ${Loyalsoldier_download_url}${end}" 
-    webget2  /tmp/Loyalsoldier.ini  ${url_cdn}${Loyalsoldier_download_url}
-    if [ -f "/tmp/Loyalsoldier.ini" ]; then
-      [ -f "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini"
-      mv /tmp/Loyalsoldier.ini ${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini
-    else
-      echo -e "${red}Failed to download Subconverter Loyalsoldier.ini${end}"
-      exit 1
-    fi
-}
+# download_subconverter_formyairport () {
+#     formyairport_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/formyairport.ini"
+#     echo -e "${green}Start download Subconverter formyairport from ${formyairport_download_url}${end}" 
+#     webget2  /tmp/formyairport.ini  ${url_cdn}${formyairport_download_url}
+#     if [ -f "/tmp/formyairport.ini" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/profiles/formyairport.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/formyairport.ini"
+#       mv /tmp/formyairport.ini ${SUBCONVERTER_PATH}/profiles/formyairport.ini
+#     else
+#       echo -e "${red}Failed to download Subconverter formyairport.ini${end}"
+#       exit 1
+#     fi
+# }
 
-download_subconverter_yuanlam () {
-    yuanlam_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"
-    echo -e "${green}Start download Subconverter yuanlam.ini from ${yuanlam_download_url}${end}" 
-    webget2  /tmp/yuanlam.ini  ${url_cdn}${yuanlam_download_url}
-    if [ -f "/tmp/yuanlam.ini" ]; then
-      [ -f "${SUBCONVERTER_PATH}/profiles/yuanlam.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/yuanlam.ini"
-      mv /tmp/yuanlam.ini ${SUBCONVERTER_PATH}/profiles/yuanlam.ini
-    else
-      echo -e "${red}Failed to download Subconverter yuanlam.ini${end}"
-      exit 1
-    fi
-}
+# download_subconverter_all_base () {
+#     all_base_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/all_base.tpl"
+#     echo -e "${green}Start download Subconverter All_base.tpl from ${all_base_download_url}${end}" 
+#     webget2  /tmp/all_base.tpl  ${url_cdn}${all_base_download_url}
+#     if [ -f "/tmp/all_base.tpl" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/base/all_base.tpl" ] && rm -rf "${SUBCONVERTER_PATH}/base/all_base.tpl"
+#       mv /tmp/all_base.tpl ${SUBCONVERTER_PATH}/base/all_base.tpl
+#     else
+#       echo -e "${red}Failed to download Subconverter All_base.tpl${end}"
+#       exit 1
+#     fi
+# }
 
-download_subconverter_ShellClash_Full () {
-    ShellClash_Full_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini"
-    echo -e "${green}Start download Subconverter ShellClash_Full.ini from ${ShellClash_Full_download_url}${end}" 
-    webget2  /tmp/ShellClash_Full.ini  ${url_cdn}${ShellClash_Full_download_url}
-    if [ -f "/tmp/ShellClash_Full.ini" ]; then
-      [ -f "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini"
-      mv /tmp/ShellClash_Full.ini ${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini
-    else
-      echo -e "${red}Failed to download Subconverter ShellClash_Full.ini${end}"
-      exit 1
-    fi
-}
+# download_subconverter_Loyalsoldier () {
+#     Loyalsoldier_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/Loyalsoldier.ini"
+#     echo -e "${green}Start download Subconverter Loyalsoldier.ini from ${Loyalsoldier_download_url}${end}" 
+#     webget2  /tmp/Loyalsoldier.ini  ${url_cdn}${Loyalsoldier_download_url}
+#     if [ -f "/tmp/Loyalsoldier.ini" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini"
+#       mv /tmp/Loyalsoldier.ini ${SUBCONVERTER_PATH}/profiles/Loyalsoldier.ini
+#     else
+#       echo -e "${red}Failed to download Subconverter Loyalsoldier.ini${end}"
+#       exit 1
+#     fi
+# }
 
-download_subconverter_LM-Firefly () {
-    LM_Firefly_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/LM-Firefly.ini"
-    echo -e "${green}Start download Subconverter LM-Firefly.ini from ${LM_Firefly_download_url}${end}" 
-    webget2  /tmp/LM-Firefly.ini  ${url_cdn}${LM_Firefly_download_url}
-    if [ -f "/tmp/LM-Firefly.ini" ]; then
-      [ -f "${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini"
-      mv /tmp/LM-Firefly.ini ${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini
-    else
-      echo -e "${red}Failed to download Subconverter LM-Firefly.ini${end}"
-      exit 1
-    fi
-}
+# download_subconverter_yuanlam () {
+#     yuanlam_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/yuanlam.ini"
+#     echo -e "${green}Start download Subconverter yuanlam.ini from ${yuanlam_download_url}${end}" 
+#     webget2  /tmp/yuanlam.ini  ${url_cdn}${yuanlam_download_url}
+#     if [ -f "/tmp/yuanlam.ini" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/profiles/yuanlam.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/yuanlam.ini"
+#       mv /tmp/yuanlam.ini ${SUBCONVERTER_PATH}/profiles/yuanlam.ini
+#     else
+#       echo -e "${red}Failed to download Subconverter yuanlam.ini${end}"
+#       exit 1
+#     fi
+# }
+
+# download_subconverter_ShellClash_Full () {
+#     ShellClash_Full_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini"
+#     echo -e "${green}Start download Subconverter ShellClash_Full.ini from ${ShellClash_Full_download_url}${end}" 
+#     webget2  /tmp/ShellClash_Full.ini  ${url_cdn}${ShellClash_Full_download_url}
+#     if [ -f "/tmp/ShellClash_Full.ini" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini"
+#       mv /tmp/ShellClash_Full.ini ${SUBCONVERTER_PATH}/profiles/ShellClash_Full.ini
+#     else
+#       echo -e "${red}Failed to download Subconverter ShellClash_Full.ini${end}"
+#       exit 1
+#     fi
+# }
+
+# download_subconverter_LM-Firefly () {
+#     LM_Firefly_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/LM-Firefly.ini"
+#     echo -e "${green}Start download Subconverter LM-Firefly.ini from ${LM_Firefly_download_url}${end}" 
+#     webget2  /tmp/LM-Firefly.ini  ${url_cdn}${LM_Firefly_download_url}
+#     if [ -f "/tmp/LM-Firefly.ini" ]; then
+#       [ -f "${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini" ] && rm -rf "${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini"
+#       mv /tmp/LM-Firefly.ini ${SUBCONVERTER_PATH}/profiles/LM-Firefly.ini
+#     else
+#       echo -e "${red}Failed to download Subconverter LM-Firefly.ini${end}"
+#       exit 1
+#     fi
+# }
 
 update_subconverter_y() {
     getcpucore3
@@ -1710,7 +1727,7 @@ ping_service() {
 update_config () {
     update_clash_config
     update_mosdns_config
-    update_subconverter_config
+    # update_subconverter_config
 }
 
 update_clash_config () {
@@ -1725,14 +1742,14 @@ update_mosdns_config () {
     restart_mosdns
 }
 
-update_subconverter_config () {
-    download_subconverter_all_base
-    download_subconverter_Loyalsoldier
-    download_subconverter_yuanlam
-    download_subconverter_ShellClash_Full
-    download_subconverter_LM-Firefly
-    restart_subconverter
-}
+# update_subconverter_config () {
+#     download_subconverter_all_base
+#     download_subconverter_Loyalsoldier
+#     download_subconverter_yuanlam
+#     download_subconverter_ShellClash_Full
+#     download_subconverter_LM-Firefly
+#     restart_subconverter
+# }
 
 dler_config() {
     read -e -p "是否使用dler订阅? [Y/n] :" yn
@@ -1957,44 +1974,54 @@ getudp(){
 
 linkconfig(){
   echo -----------------------------------------------
-  echo 1  LM-Firefly（推荐）
-  echo 2  ShellClash增强版（推荐）
-  echo 3  ACL4SSR通用版无去广告（推荐）
-  echo 4  ACL4SSR精简全能版
-  echo 5  ACL4SSR通用版+去广告加强
-  echo 6  ACL4SSR精简版+去广告加强
-  echo 7  ACL4SSR重度全分组+奈飞分流
-  echo 9  ACL4SSR重度全分组+去广告加强
+  echo 1  AIO
+  echo 2  AIO_无测速版
+  echo 3  LM-Firefly
+  echo 4  ShellClash增强版
+  # echo 5  ACL4SSR通用版无去广告
+  # echo 6  ACL4SSR精简全能版
+  # echo 7  ACL4SSR通用版+去广告加强
+  # echo 8  ACL4SSR精简版+去广告加强
+  # echo 9  ACL4SSR重度全分组+奈飞分流
+  # echo 10  ACL4SSR重度全分组+去广告加强
   echo -----------------------------------------------
   read -e -p "请输入对应数字[1-8] > " num
   if [ "$num" = 1 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config profiles/LM-Firefly.ini  
+    setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/AIO.ini
   elif [ "$num" = 2 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config profiles/ShellClash_Full.ini
+    setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/AIO_NoAuto.ini
   elif [ "$num" = 3 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config config/ACL4SSR_Online_NoReject.ini
+    setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/LM-Firefly.ini
   elif [ "$num" = 4 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config config/ACL4SSR_Online_Mini_MultiMode.ini   
+    setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/ShellClash_Full.ini
   elif [ "$num" = 5 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config config/ACL4SSR_Online_AdblockPlus.ini
+    setconfig config config/ACL4SSR_Online_NoReject.ini
   elif [ "$num" = 6 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config config/ACL4SSR_Online_Mini_AdblockPlus.ini  
+    setconfig config config/ACL4SSR_Online_Mini_MultiMode.ini   
   elif [ "$num" = 7 ];then
     sed -i '/config=*/'d $formyairport_path
-    setconfig config config/ACL4SSR_Online_Full_Netflix.ini
+    setconfig config config/ACL4SSR_Online_AdblockPlus.ini
   elif [ "$num" = 8 ];then
+    sed -i '/config=*/'d $formyairport_path
+    setconfig config config/ACL4SSR_Online_Mini_AdblockPlus.ini  
+  elif [ "$num" = 9 ];then
+    sed -i '/config=*/'d $formyairport_path
+    setconfig config config/ACL4SSR_Online_Full_Netflix.ini
+  elif [ "$num" = 10 ];then
     sed -i '/config=*/'d $formyairport_path
     setconfig config config/ACL4SSR_Online_Full_AdblockPlus.ini
   else
     errornum
     linkconfig        
   fi
+  echo -----------------------------------------------
+  echo -e   "\033[44m选择配置模版完成\033[0m"
 }
 
 getlink(){
@@ -2015,21 +2042,17 @@ getlink(){
           sed -i '/url=*/'d $formyairport_path
           setconfig url $link
           getudp
-          linkconfig
           echo -----------------------------------------------
-          echo -e   "\033[44m订阅模版完成\033[0m"
-          getlink_menu
+          echo -e   "\033[44m添加订阅链接完成\033[0m"
         elif [ "$res" = '0' ]; then
           getlink
         else
           errornum
-          getlink_menu
         fi
     else
       echo -----------------------------------------------
       echo -e "\033[31m请输入正确的订阅链接地址!!!\033[0m"
       sleep 1
-      getlink_menu
     fi
 }
 
@@ -2356,15 +2379,20 @@ getlink_menu() {
     echo -e "\033[30;43m欢迎使用导入配置文件菜单\033[0m"
     echo -----------------------------------------------
     echo -e "1. ${green}添加 ${end}订阅链接"
-    echo -e "2. ${green}生成 ${end}Clash配置文件"
+    echo -e "2. ${green}选择 ${end}配置模版"
+    echo -e "3. ${green}生成 ${end}Clash配置文件"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
     echo -----------------------------------------------
-    echo && read -e -p "请输入选择 [1-2]: " num
+    echo && read -e -p "请输入选择 [1-3]: " num
     case "${num}" in
       1)  getlink
+          getlink_menu
     ;;
-      2)  getyaml
+      2)  linkconfig
+          getlink_menu
+    ;;
+      3)  getyaml
     ;;
       0)  show_menu
     ;;
@@ -2435,7 +2463,8 @@ EOF
     echo -e "4. ${green}更新 ${end}Subconverter  ${yellow}v$(cat ${subconverter_version_file})${end}     >  ${lightblue}${new_subconverter_version}${end}" 
     echo -e "5. ${green}更新 ${end}Clash配置"
     echo -e "6. ${green}更新 ${end}Mosdns配置"
-    echo -e "7. ${green}更新 ${end}Subconverter配置"
+    # echo -e "7. ${green}更新 ${end}Subconverter配置"
+    echo -----------------------------------------------
     echo -e "8. ${red}卸载 ${end}AIOClash"
     echo -----------------------------------------------
     echo -e "0. 返回上级菜单"
@@ -2455,8 +2484,8 @@ EOF
     ;;
       6)  update_mosdns_config
     ;;
-      7)  update_subconverter_config
-    ;;
+      # 7)  update_subconverter_config
+    # ;;
       8)  uninstall
     ;;
       0)  show_menu
@@ -2543,8 +2572,8 @@ if [[ $# > 0 ]]; then
     ;;
       "update_mosdns_config") update_mosdns_config 0
     ;;
-      "update_subconverter_config") update_subconverter_config 0
-    ;;
+    #   "update_subconverter_config") update_subconverter_config 0
+    # ;;
       "update_config") update_config 0
     ;;                   
       "update") update_shell 0
