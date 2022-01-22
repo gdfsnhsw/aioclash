@@ -1044,6 +1044,7 @@ install_clash() {
     echo "clash_v ${remote_clash_version}" >> ${AIOCLASH_PATH}/version
 
     rm -rf ${clash_bin}
+    cd ~
     gunzip /tmp/clash/clash.gz
     mv /tmp/clash/clash ${clash_bin}
     chmod +x ${clash_bin}
