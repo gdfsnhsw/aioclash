@@ -1985,7 +1985,9 @@ linkconfig(){
   # echo 9  ACL4SSR重度全分组+奈飞分流
   # echo 10  ACL4SSR重度全分组+去广告加强
   echo -----------------------------------------------
-  read -e -p "请输入对应数字[1-8] > " num
+  echo 0  返回上级菜单
+  echo -----------------------------------------------
+  read -e -p "请输入对应数字[1-4] > " num
   if [ "$num" = 1 ];then
     sed -i '/config=*/'d $formyairport_path
     setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/AIO.ini
@@ -2016,6 +2018,8 @@ linkconfig(){
   elif [ "$num" = 10 ];then
     sed -i '/config=*/'d $formyairport_path
     setconfig config config/ACL4SSR_Online_Full_AdblockPlus.ini
+  elif [ "$num" = 0 ];then
+    getlink_menu
   else
     errornum
     linkconfig        
