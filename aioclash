@@ -21,7 +21,7 @@ lightblueb="\033[1;36m"
 sh_ver="1.3.2"
 
 # url_cdn="https://git.o8.cx/"
-url_cdn="https://gh.nhyzhfs.workers.dev/"
+url_cdn="http://gh.168828.xyz/"
 
 cpu=$(hostnamectl | grep Architecture: | awk '{print $2}')
 system=$(cat /etc/issue | awk '{print $1}')
