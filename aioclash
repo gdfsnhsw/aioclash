@@ -945,8 +945,6 @@ script:
         # 漏网之鱼
         return "🐟 漏网之鱼"
 EOF
-echo -e "\033[32m已成功获取代理集配置文件,请手动修改所需代理集!\033[0m"
-echo -e "${green}Clash配置文件:${yaml_path}${end}"
 }
 
 config_base() { 
@@ -1730,8 +1728,6 @@ install_nftables_cn() {
     echo -e "${yellow}Nftables successfully installed${end}"
 }
 
-
-
 install_cron() {
     cat << EOF > /var/spool/cron/crontabs/root
 0 5 * * * aioclash check_ver >/dev/null 2>&1 #每天的5点0分更新AIOClash服务版本
@@ -1954,7 +1950,6 @@ restart_subconverter() {
     fi
 }
 
-
 status() {
     supervisorctl status clash
     if [[ $# == 0 ]]; then
@@ -2053,7 +2048,15 @@ linkconfig(){
   if [ "$num" = 1 ];then
     mkyamlbak
     set_clash_config
-    restart_clash
+    supervisorctl restart clash
+    while true; do
+        ip link show utun  >> /dev/null 2>&1
+        [ $? -eq 0 ] && break
+        echo -e "\033[32m正在启动clash，请等待...\033[0m"
+        sleep 3
+    done
+    echo -e "\033[32mClash服务启动成功!\033[0m"
+    echo -e "${green}Clash代理集配置文件:${yaml_path}${end}"
   elif [ "$num" = 2 ];then
     sed -i '/config=*/'d $formyairport_path
     setconfig config ${url_cdn}https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/subconverter/AIO.ini
@@ -2136,6 +2139,12 @@ keepyaml(){
           supervisorctl restart clash
         else
           echo -----------------------------------------------
+          while true; do
+            ip link show utun  >> /dev/null 2>&1
+            [ $? -eq 0 ] && break
+            echo -e "\033[32m正在启动clash，请等待...\033[0m"
+            sleep 3
+          done
           echo -e "\033[32mClash服务启动成功!\033[0m"
           echo -e "Clash控制面板:\033[36;4mhttp://${local_ip}:9090/ui/\033[0m"
           echo -----------------------------------------------
