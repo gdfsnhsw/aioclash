@@ -2612,11 +2612,7 @@ uninstall() {
 
     # rm -rf /etc/supervisor/supervisord.conf
 
-    systemctl stop nftables.service >> /dev/null 2>&1
-    systemctl disable nftables.service >> /dev/null 2>&1
-    rm -rf /etc/nftables/chnroute.nft
-    rm -rf /etc/nftables/private.nft
-    rm -rf /etc/nftables.conf
+    rm -rf /lib/clash
 
     rm -rf ${AIOCLASH_PATH}/version
     rm -rf ${aioclash_path}
