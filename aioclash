@@ -1686,8 +1686,7 @@ install_nftables_cn() {
     if [ ! -d "/tmp/nftables" ]; then
       mkdir /tmp/nftables
     fi
-    mkdir -p /etc/nftables
-# Nftables nftables.conf
+    mkdir -p /lib/clash
     nftables_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/nftables.conf"
     echo -e "${green}Start download Nftables nftables.conf from ${nftables_download_url}${end}" 
     webget2  /tmp/nftables/nftables.conf  ${url_cdn}${nftables_download_url}
@@ -1695,15 +1694,46 @@ install_nftables_cn() {
       echo -e "${red}Failed to download Nftables nftables.conf${end}"
       exit 1
     fi
-# Nftables private.nft
-    private_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/private.nft"
-    echo -e "${green}Start download Nftables private.nft from ${private_download_url}${end}" 
-    webget2  /tmp/nftables/private.nft  ${url_cdn}${private_download_url}
-    if [ ! -f "/tmp/nftables/private.nft" ]; then
-      echo -e "${red}Failed to download Nftables private.nft${end}"
+    mv /tmp/nftables/nftables.conf /lib/clash/nftables.conf
+
+    rules_download_url="https://raw.githubusercontent.com/gdfsnhsw/aioclash/main/nftables/rules.sh"
+    echo -e "${green}Start download Nftables rules.sh from ${rules_download_url}${end}" 
+    webget2  /tmp/nftables/rules.sh  ${url_cdn}${rules_download_url}
+    if [ ! -f "/tmp/nftables/rules.sh" ]; then
+      echo -e "${red}Failed to download Nftables rules.sh${end}"
       exit 1
     fi
-# Nftables chnroute.nft
+    mv /tmp/nftables/rules.sh /lib/clash/rules.sh
+    chmod 700 /lib/clash/rules.sh
+
+    download_cn_ip
+
+    cat << EOF > /lib/clash/private.nft
+define private_list = {
+	10.0.0.0/8,
+	11.0.0.0/8,
+	100.64.0.0/10,
+	127.0.0.0/8,
+	169.254.0.0/16,
+	172.16.0.0/12,
+	192.168.0.0/16,
+	224.0.0.0/4,
+	240.0.0.0/4
+}
+EOF
+
+    cat << EOF > /etc/udev/rules.d/99-clash.rules
+SUBSYSTEM=="net",ENV{INTERFACE}=="utun",ACTION=="add",RUN+="/lib/clash/rules.sh setup"
+SUBSYSTEM=="net",ENV{INTERFACE}=="utun",ACTION=="remove",RUN+="/lib/clash/rules.sh clean"
+EOF
+
+    echo -e "${yellow}Nftables successfully installed${end}"
+}
+
+download_cn_ip() {
+    if [ ! -d "/tmp/nftables" ]; then
+      mkdir /tmp/nftables
+    fi
     china_ip_list_download_url="https://raw.githubusercontent.com/17mon/china_ip_list/master/china_ip_list.txt"
     echo -e "${green}Start download china_ip_list from ${china_ip_list_download_url}${end}" 
     webget2  /tmp/nftables/china_ip_list.txt  ${url_cdn}${china_ip_list_download_url}
@@ -1715,17 +1745,14 @@ install_nftables_cn() {
     cat /tmp/nftables/china_ip_list.txt | sed s/$/,/g >> /tmp/nftables/chnroute.nft
     echo "}" >> /tmp/nftables/chnroute.nft
 
-    mv /tmp/nftables/chnroute.nft /etc/nftables/chnroute.nft
-    mv /tmp/nftables/private.nft /etc/nftables/private.nft
-    mv /tmp/nftables/nftables.conf /etc/nftables.conf
-    ip route replace default dev utun table 114  >> /dev/null 2>&1
-    ip rule del fwmark 114514 lookup 114  >> /dev/null 2>&1
-    ip rule add fwmark 114514 lookup 114 >> /dev/null 2>&1
-    sudo sh -c "nft flush ruleset && nft -f /etc/nftables.conf" >> /dev/null 2>&1
-    systemctl enable nftables.service >> /dev/null 2>&1
-    systemctl start nftables.service >> /dev/null 2>&1
-    rm -rf /tmp/nftables
-    echo -e "${yellow}Nftables successfully installed${end}"
+    if [ -f "/tmp/nftables/chnroute.nft" ]; then
+      [ -f "/tmp/nftables/chnroute.nft" ] && rm -rf "/lib/clash/chnroute.nft"
+      mv /tmp/nftables/chnroute.nft /lib/clash/chnroute.nft
+      rm -rf /tmp/nftables
+    else
+      echo -e "${red}Failed to download Nftables CN_IP${end}"
+      exit 1
+    fi
 }
 
 install_cron() {
@@ -1812,6 +1839,7 @@ ping_service() {
 update_config () {
     update_clash_config
     update_mosdns_config
+    update_cn_ip
     # update_subconverter_config
 }
 
@@ -1825,6 +1853,10 @@ update_mosdns_config () {
     download_mosdns_geoip
     download_geosite_geoip
     restart_mosdns
+}
+
+update_cn_ip () {
+    download_cn_ip
 }
 
 # update_subconverter_config () {
@@ -2516,7 +2548,7 @@ EOF
     echo -e "4. ${green}更新 ${end}Subconverter  ${yellow}v$(cat ${subconverter_version_file})${end}     >  ${lightblue}${new_subconverter_version}${end}" 
     echo -e "5. ${green}更新 ${end}Clash配置"
     echo -e "6. ${green}更新 ${end}Mosdns配置"
-    # echo -e "7. ${green}更新 ${end}Subconverter配置"
+    echo -e "7. ${green}更新 ${end}CN_IP文件"
     echo -----------------------------------------------
     echo -e "8. ${red}卸载 ${end}AIOClash"
     echo -----------------------------------------------
@@ -2538,11 +2570,14 @@ EOF
           before_show_menu
     ;;                   
       5)  update_clash_config
+          before_show_menu
     ;;
       6)  update_mosdns_config
+          before_show_menu
     ;;
-      # 7)  update_subconverter_config
-    # ;;
+      7)  update_cn_ip
+          before_show_menu
+    ;;
       8)  uninstall
     ;;
       0)  show_menu
