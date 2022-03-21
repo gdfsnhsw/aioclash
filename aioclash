@@ -379,6 +379,7 @@ proxy-providers:
       url: http://connectivitycheck.gstatic.com/generate_204
   # HK:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '香港'
   #   health-check:
@@ -387,6 +388,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # TW:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '台湾'
   #   health-check:
@@ -395,6 +397,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # UA:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '美国'
   #   health-check:
@@ -403,6 +406,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # JP:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '日本'
   #   health-check:
@@ -411,6 +415,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # SG:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '新加坡'
   #   health-check:
@@ -419,6 +424,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # KR:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: '韩国'
   #   health-check:
@@ -427,6 +433,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # Netflix:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: 'Netflix'
   #   health-check:
@@ -435,6 +442,7 @@ proxy-providers:
   #     url: http://connectivitycheck.gstatic.com/generate_204
   # SPECIAL:
   #   type: file
+  #   interval: 3600
   #   path: ./Proxy/AllProxy.yaml
   #   filter: 'IEPL|IPLC'
   #   health-check:
