@@ -20,7 +20,6 @@ lightblueb="\033[1;36m"
 
 sh_ver="1.4.0"
 
-# url_cdn="https://git.o8.cx/"
 url_cdn="https://gh.nhyzhfs.workers.dev/"
 # url_cdn="https://gh.168828.xyz/"
 
