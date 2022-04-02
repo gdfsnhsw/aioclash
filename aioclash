@@ -18,7 +18,7 @@ purpleb="\033[1;35m"
 lightblue="\033[0;36m"
 lightblueb="\033[1;36m"
 
-sh_ver="1.4.0"
+sh_ver="1.4.1"
 
 url_cdn="https://gh.nhyzhfs.workers.dev/"
 # url_cdn="https://gh.168828.xyz/"
@@ -2531,17 +2531,14 @@ setup_menu() {
 
 update_menu() {
     echo -e "${green}正在检查更新...${end}"
-    if [ ! -f "${AIOCLASH_PATH}/version" ]; then
-      cat << EOF > ${AIOCLASH_PATH}/version
+    rm -rf ${AIOCLASH_PATH}/version
+    cat << EOF > ${AIOCLASH_PATH}/version
 version 
 clash_v 
 mosdns_v 
 subconverter_v 
 EOF
-      check_ver
-    else
-      check_aioclash_ver
-    fi
+    check_ver
     new_clash_version=$(cat ${AIOCLASH_PATH}/version  | grep clash_v | awk '{print $2}'| cut -d'-' -f1)
     new_mosdns_version=$(cat ${AIOCLASH_PATH}/version  | grep mosdns_v | awk '{print $2}'| cut -d'-' -f1)
     new_subconverter_version=$(cat ${AIOCLASH_PATH}/version  | grep subconverter_v | awk '{print $2}'| cut -d'-' -f1)
