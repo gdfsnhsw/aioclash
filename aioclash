@@ -244,8 +244,8 @@ set_clash_config() {
 mixed-port: 7891
 redir-port: 7892
 tproxy-port: 7893
-authentication:
-  - user:pass
+# authentication:
+#   - user:pass
 allow-lan: true
 bind-address: "*"
 mode: script
